@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "scheme": "quran",
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-secure-store"
+    ],
+    "name": "Quran",
+    "slug": "quran",
+    "userInterfaceStyle": "automatic"
+  }
+}
