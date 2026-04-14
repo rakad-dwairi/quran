@@ -140,7 +140,15 @@ export async function getTafsirs(language = "en"): Promise<TafsirResource[]> {
 
 type VersesByChapterResponse = {
   verses: unknown[];
-  meta: {
+  // Quran.com currently returns `pagination`, but older examples used `meta`.
+  pagination?: {
+    current_page: number;
+    next_page: number | null;
+    total_pages: number;
+    total_records?: number;
+    per_page?: number;
+  };
+  meta?: {
     current_page: number;
     next_page: number | null;
     total_pages: number;
@@ -173,8 +181,13 @@ export async function getVersesByChapter(
     per_page: perPage,
   });
 
+  const pagination = data.pagination ?? data.meta;
+  if (!pagination) {
+    throw new Error("Unexpected Quran.com response: missing pagination info.");
+  }
+
   const verses = z.array(VerseSchema).parse(data.verses).map(normalizeVerse);
-  return { verses, totalPages: data.meta.total_pages, page: data.meta.current_page };
+  return { verses, totalPages: pagination.total_pages, page: pagination.current_page };
 }
 
 export async function getAllVersesByChapter(
@@ -312,4 +325,3 @@ export async function getTafsirByAyah(tafsirId: number, verseId: number): Promis
   const html = TafsirByAyahSchema.parse(data).tafsir.text;
   return { html, plain: stripHtmlTags(html) };
 }
-
