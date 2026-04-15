@@ -1,51 +1,75 @@
 import { router } from "expo-router";
-import { useMemo } from "react";
-import { ActivityIndicator, FlatList, Pressable, Text, View } from "react-native";
+import { Image, Pressable, Text, View } from "react-native";
 import { AppHeader } from "@/components/AppHeader";
 import { NowPlayingButton } from "@/components/NowPlayingButton";
 import { Screen } from "@/components/Screen";
-import { SurahListItem } from "@/components/SurahListItem";
-import { useChaptersQuery } from "@/hooks/quranQueries";
+import { useAuth } from "@/providers/AuthProvider";
 
-export default function HomeScreen() {
-  const chaptersQuery = useChaptersQuery({ language: "en" });
-  const data = useMemo(() => chaptersQuery.data ?? [], [chaptersQuery.data]);
+function ProfileButton() {
+  const { user } = useAuth();
+  const initial = (user?.email?.trim()?.[0] ?? "U").toUpperCase();
 
   return (
-    <Screen className="pt-6">
-      <AppHeader title="Read" subtitle="Browse Surahs and continue reading." right={<NowPlayingButton />} />
-
-      {chaptersQuery.isLoading ? (
-        <View className="flex-1 items-center justify-center py-10">
-          <ActivityIndicator />
-          <Text className="mt-3 font-ui text-muted">Loading Surahs…</Text>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Open settings"
+      onPress={() => router.push("/settings")}
+      className="ml-2 h-10 w-10 overflow-hidden rounded-full border border-border bg-surface active:opacity-80"
+    >
+      {user?.photoURL ? (
+        <Image source={{ uri: user.photoURL }} className="h-10 w-10" resizeMode="cover" />
+      ) : (
+        <View className="h-10 w-10 items-center justify-center bg-primaryMuted">
+          <Text className="font-uiSemibold text-sm text-text">{initial}</Text>
         </View>
-      ) : chaptersQuery.isError ? (
-        <View className="flex-1 items-center justify-center py-10">
-          <Text className="font-uiSemibold text-base text-text">Couldn’t load Surahs</Text>
-          <Text className="mt-2 text-center font-ui text-muted">
-            Check your connection and try again.
-          </Text>
+      )}
+    </Pressable>
+  );
+}
+
+export default function HomeScreen() {
+  return (
+    <Screen className="pt-6">
+      <AppHeader
+        title="Home"
+        subtitle="Start your day with calm reading and remembrance."
+        right={
+          <View className="flex-row items-center">
+            <NowPlayingButton />
+            <ProfileButton />
+          </View>
+        }
+      />
+
+      <View className="mt-4 rounded-2xl border border-border bg-surface px-4 py-5">
+        <Text className="font-uiSemibold text-base text-text">Quick actions</Text>
+
+        <View className="mt-4 gap-3">
           <Pressable
-            className="mt-5 rounded-2xl bg-primary px-5 py-3"
-            onPress={() => chaptersQuery.refetch()}
+            className="rounded-2xl bg-bg px-4 py-4 active:opacity-80"
+            onPress={() => router.push("/quran")}
           >
-            <Text className="font-uiSemibold text-white">Retry</Text>
+            <Text className="font-uiSemibold text-base text-text">Open Quran</Text>
+            <Text className="mt-1 font-ui text-sm text-muted">Browse Surahs and continue reading.</Text>
+          </Pressable>
+
+          <Pressable
+            className="rounded-2xl bg-bg px-4 py-4 active:opacity-80"
+            onPress={() => router.push("/bookmarks")}
+          >
+            <Text className="font-uiSemibold text-base text-text">Bookmarks</Text>
+            <Text className="mt-1 font-ui text-sm text-muted">Saved verses and favorites.</Text>
           </Pressable>
         </View>
-      ) : (
-        <FlatList
-          data={data}
-          keyExtractor={(item) => String(item.id)}
-          contentContainerStyle={{ paddingBottom: 24 }}
-          ItemSeparatorComponent={() => <View className="h-3" />}
-          renderItem={({ item }) => (
-            <Pressable onPress={() => router.push(`/surah/${item.id}`)} className="active:opacity-80">
-              <SurahListItem chapter={item} />
-            </Pressable>
-          )}
-        />
-      )}
+      </View>
+
+      <View className="mt-4 rounded-2xl border border-border bg-surface px-4 py-5">
+        <Text className="font-uiSemibold text-base text-text">Coming soon</Text>
+        <Text className="mt-2 font-ui text-sm text-muted">
+          We'll add more features here next (updates, nearby events, and more).
+        </Text>
+      </View>
     </Screen>
   );
 }
+

@@ -54,6 +54,7 @@ export default function SearchScreen() {
       <AppHeader
         title="Search"
         subtitle="Find verses by keyword, Surah, or verse number."
+        showBack
         right={<NowPlayingButton />}
       />
 

@@ -8,6 +8,17 @@
     ],
     "name": "Quran",
     "slug": "quran",
-    "userInterfaceStyle": "automatic"
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "We use your location to show accurate prayer times near you."
+      }
+    },
+    "android": {
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ]
+    }
   }
 }

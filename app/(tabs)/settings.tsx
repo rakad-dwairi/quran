@@ -43,7 +43,12 @@ export default function SettingsScreen() {
 
   return (
     <Screen className="pt-6">
-      <AppHeader title="Settings" subtitle="Typography and preferences." right={<NowPlayingButton />} />
+      <AppHeader
+        title="Settings"
+        subtitle="Typography and preferences."
+        showBack
+        right={<NowPlayingButton />}
+      />
 
       <View className="rounded-2xl border border-border bg-surface p-4">
         <Text className="font-uiSemibold text-base text-text">Reading</Text>

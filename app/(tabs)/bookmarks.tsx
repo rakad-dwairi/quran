@@ -41,7 +41,12 @@ export default function BookmarksScreen() {
 
   return (
     <Screen className="pt-6">
-      <AppHeader title="Library" subtitle="Bookmarks and favorites." right={<NowPlayingButton />} />
+      <AppHeader
+        title="Library"
+        subtitle="Bookmarks and favorites."
+        showBack
+        right={<NowPlayingButton />}
+      />
 
       {sections.length === 0 ? (
         <View className="mt-4 rounded-2xl border border-border bg-surface px-4 py-6">

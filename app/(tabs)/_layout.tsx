@@ -15,39 +15,53 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Read",
+          title: "Home",
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="home-variant-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="prayers"
+        options={{
+          title: "Prayers",
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="mosque" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="quran"
+        options={{
+          title: "Quran",
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="book-open-page-variant" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="search"
+        name="ai"
         options={{
-          title: "Search",
+          title: "AI",
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="magnify" size={size} color={color} />
+            <MaterialCommunityIcons name="robot-outline" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="bookmarks"
+        name="new"
         options={{
-          title: "Library",
+          title: "New",
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="bookmark-multiple" size={size} color={color} />
+            <MaterialCommunityIcons name="newspaper-variant-outline" size={size} color={color} />
           ),
         }}
       />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: "Settings",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="cog" size={size} color={color} />
-          ),
-        }}
-      />
+
+      {/* Hidden routes (still navigable via buttons) */}
+      <Tabs.Screen name="search" options={{ href: null }} />
+      <Tabs.Screen name="bookmarks" options={{ href: null }} />
+      <Tabs.Screen name="settings" options={{ href: null }} />
     </Tabs>
   );
 }
