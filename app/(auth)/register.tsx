@@ -178,7 +178,7 @@ export default function RegisterScreen() {
   }
 
   return (
-    <Screen className="pt-10">
+    <Screen className="pt-10" showAd={false}>
       <Stack.Screen options={{ headerShown: false }} />
 
       <View className="flex-row items-center justify-between">

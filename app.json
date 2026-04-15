@@ -4,7 +4,16 @@
     "plugins": [
       "expo-router",
       "expo-font",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-9413843584219893~5507752826",
+          "iosAppId": "ca-app-pub-9413843584219893~6820834493",
+          "delayAppMeasurementInit": true,
+          "userTrackingUsageDescription": "This identifier may be used to deliver relevant ads."
+        }
+      ]
     ],
     "name": "Quran",
     "slug": "quran",

@@ -63,7 +63,7 @@ export default function WelcomeScreen() {
   const englishText = useMemo(() => englishWords.slice(0, englishWordsVisible).join(" "), [englishWords, englishWordsVisible]);
 
   return (
-    <Screen padded={false} className="bg-primary">
+    <Screen padded={false} className="bg-primary" showAd={false}>
       <Stack.Screen options={{ headerShown: false }} />
       <Pattern />
 
