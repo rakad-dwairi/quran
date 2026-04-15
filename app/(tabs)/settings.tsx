@@ -17,9 +17,11 @@ export default function SettingsScreen() {
     showTranslation,
     arabicFontSize,
     translationFontSize,
+    verseLayout,
     setShowTranslation,
     bumpArabicFontSize,
     bumpTranslationFontSize,
+    setVerseLayout,
   } = useSettingsStore();
 
   const translationsQuery = useTranslationsQuery({ language: "en" });
@@ -121,6 +123,44 @@ export default function SettingsScreen() {
             trackColor={{ false: colors.border, true: colors.primaryMuted }}
             thumbColor={showTranslation ? colors.primary : colors.bg}
           />
+        </View>
+
+        <View className="mt-4">
+          <Text className="font-uiMedium text-sm text-text">Verse layout</Text>
+          <Text className="mt-1 font-ui text-sm text-muted">
+            Choose how verses are displayed. In Page view, tap a verse for bookmark/favorite/tafsir.
+          </Text>
+
+          <View className="mt-3 flex-row rounded-2xl border border-border bg-bg p-1">
+            <Pressable
+              className={`flex-1 rounded-xl px-3 py-2 active:opacity-80 ${
+                verseLayout === "cards" ? "bg-primary" : "bg-transparent"
+              }`}
+              onPress={() => setVerseLayout("cards")}
+            >
+              <Text
+                className={`text-center font-uiSemibold ${
+                  verseLayout === "cards" ? "text-primaryForeground" : "text-text"
+                }`}
+              >
+                Cards
+              </Text>
+            </Pressable>
+            <Pressable
+              className={`flex-1 rounded-xl px-3 py-2 active:opacity-80 ${
+                verseLayout === "page" ? "bg-primary" : "bg-transparent"
+              }`}
+              onPress={() => setVerseLayout("page")}
+            >
+              <Text
+                className={`text-center font-uiSemibold ${
+                  verseLayout === "page" ? "text-primaryForeground" : "text-text"
+                }`}
+              >
+                Page
+              </Text>
+            </Pressable>
+          </View>
         </View>
         </View>
 

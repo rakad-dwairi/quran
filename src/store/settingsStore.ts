@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 type ThemeMode = "light" | "dark" | "sepia";
+type VerseLayout = "cards" | "page";
 
 type SettingsState = {
   theme: ThemeMode;
@@ -12,6 +13,7 @@ type SettingsState = {
   showTranslation: boolean;
   arabicFontSize: number;
   translationFontSize: number;
+  verseLayout: VerseLayout;
 
   dailyVerseEnabled: boolean;
   dailyVerseHour: number;
@@ -26,6 +28,7 @@ type SettingsActions = {
   setShowTranslation: (showTranslation: boolean) => void;
   bumpArabicFontSize: (delta: number) => void;
   bumpTranslationFontSize: (delta: number) => void;
+  setVerseLayout: (layout: VerseLayout) => void;
 
   setDailyVerseEnabled: (enabled: boolean) => void;
   setDailyVerseTime: (hour: number, minute: number) => void;
@@ -42,6 +45,7 @@ const DEFAULTS: SettingsState = {
   showTranslation: true,
   arabicFontSize: 28,
   translationFontSize: 16,
+  verseLayout: "cards",
 
   dailyVerseEnabled: false,
   dailyVerseHour: 8,
@@ -65,6 +69,7 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
         const next = Math.max(12, Math.min(26, get().translationFontSize + delta));
         set({ translationFontSize: next });
       },
+      setVerseLayout: (layout) => set({ verseLayout: layout }),
 
       setDailyVerseEnabled: (enabled) => set({ dailyVerseEnabled: enabled }),
       setDailyVerseTime: (hour, minute) => set({ dailyVerseHour: hour, dailyVerseMinute: minute }),

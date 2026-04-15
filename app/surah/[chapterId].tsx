@@ -5,6 +5,8 @@ import { AppHeader } from "@/components/AppHeader";
 import { NowPlayingButton } from "@/components/NowPlayingButton";
 import { Screen } from "@/components/Screen";
 import { SurahAudioControls } from "@/components/SurahAudioControls";
+import { VerseActionsSheet } from "@/components/VerseActionsSheet";
+import { VersePageRow } from "@/components/VersePageRow";
 import { VerseRow } from "@/components/VerseRow";
 import { useChapterAudioQuery, useChapterVersesQuery, useChaptersQuery } from "@/hooks/quranQueries";
 import type { Verse } from "@/services/quranComApi";
@@ -24,6 +26,7 @@ export default function SurahScreen() {
     showTranslation,
     arabicFontSize,
     translationFontSize,
+    verseLayout,
   } = useSettingsStore();
 
   const chaptersQuery = useChaptersQuery({ language: "en" });
@@ -60,6 +63,7 @@ export default function SurahScreen() {
   const listRef = useRef<FlatList<Verse>>(null);
   const highlightKey = typeof verseKey === "string" ? verseKey : undefined;
   const [highlightedVerseKey, setHighlightedVerseKey] = useState<string | undefined>(highlightKey);
+  const [actionsVerse, setActionsVerse] = useState<Verse | null>(null);
 
   useEffect(() => {
     setHighlightedVerseKey(highlightKey);
@@ -118,38 +122,72 @@ export default function SurahScreen() {
           </Pressable>
         </View>
       ) : (
-        <FlatList
-          ref={listRef}
-          data={versesQuery.data ?? offlineVerses ?? []}
-          keyExtractor={(item) => String(item.id)}
-          contentContainerStyle={{ paddingBottom: 24 }}
-          ItemSeparatorComponent={() => <View className="h-3" />}
-          onScrollToIndexFailed={(info) => {
-            // If layout isn't measured yet, try again shortly.
-            setTimeout(() => {
-              listRef.current?.scrollToIndex({ index: info.index, animated: true });
-            }, 300);
-          }}
-          ListHeaderComponent={
-            versesQuery.data ? null : offlineVerses ? (
-              <View className="mb-3 rounded-2xl border border-border bg-surface px-4 py-3">
-                <Text className="font-uiSemibold text-sm text-text">Offline copy</Text>
-                <Text className="mt-1 font-ui text-sm text-muted">
-                  Showing downloaded text. Connect to update.
-                </Text>
+        <View className={`flex-1 ${verseLayout === "page" ? "rounded-3xl border border-border bg-surface overflow-hidden" : ""}`}>
+          <FlatList
+            ref={listRef}
+            data={versesQuery.data ?? offlineVerses ?? []}
+            keyExtractor={(item) => String(item.id)}
+            contentContainerStyle={{ paddingBottom: 24 }}
+            ItemSeparatorComponent={() =>
+              verseLayout === "page" ? <View className="h-px bg-border mx-5" /> : <View className="h-3" />
+            }
+            onScrollToIndexFailed={(info) => {
+              // If layout isn't measured yet, try again shortly.
+              setTimeout(() => {
+                listRef.current?.scrollToIndex({ index: info.index, animated: true });
+              }, 300);
+            }}
+            ListHeaderComponent={
+              <View className={verseLayout === "page" ? "px-5 pt-4" : ""}>
+                {verseLayout === "page" ? (
+                  <Text className="font-ui text-sm text-muted">
+                    Page view — tap a verse to bookmark, favorite, or open tafsir.
+                  </Text>
+                ) : null}
+
+                {versesQuery.data ? null : offlineVerses ? (
+                  <View className={`${verseLayout === "page" ? "mt-3" : "mb-3"} rounded-2xl border border-border bg-bg px-4 py-3`}>
+                    <Text className="font-uiSemibold text-sm text-text">Offline copy</Text>
+                    <Text className="mt-1 font-ui text-sm text-muted">
+                      Showing downloaded text. Connect to update.
+                    </Text>
+                  </View>
+                ) : null}
+
+                {verseLayout === "page" ? <View className="h-2" /> : null}
               </View>
-            ) : null
-          }
-          renderItem={({ item }) => (
-            <VerseRow
-              verse={item}
-              showTranslation={showTranslation}
-              arabicFontSize={arabicFontSize}
-              translationFontSize={translationFontSize}
-              highlighted={item.verse_key === highlightedVerseKey}
-            />
-          )}
-        />
+            }
+            renderItem={({ item }) =>
+              verseLayout === "page" ? (
+                <VersePageRow
+                  verse={item}
+                  showTranslation={showTranslation}
+                  arabicFontSize={arabicFontSize}
+                  translationFontSize={translationFontSize}
+                  selected={item.verse_key === highlightedVerseKey || item.verse_key === actionsVerse?.verse_key}
+                  onPress={() => setActionsVerse(item)}
+                />
+              ) : (
+                <VerseRow
+                  verse={item}
+                  showTranslation={showTranslation}
+                  arabicFontSize={arabicFontSize}
+                  translationFontSize={translationFontSize}
+                  highlighted={item.verse_key === highlightedVerseKey}
+                />
+              )
+            }
+          />
+
+          <VerseActionsSheet
+            open={verseLayout === "page" && !!actionsVerse}
+            verse={actionsVerse}
+            onClose={() => setActionsVerse(null)}
+            showTranslation={showTranslation}
+            arabicFontSize={arabicFontSize}
+            translationFontSize={translationFontSize}
+          />
+        </View>
       )}
     </Screen>
   );
