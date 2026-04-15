@@ -11,10 +11,11 @@ import {
   View,
 } from "react-native";
 import { Screen } from "@/components/Screen";
-import { getFirebaseAuth, isFirebaseConfigured } from "@/services/firebaseClient";
+import { getFirebaseAuth, getFirestoreDb, isFirebaseConfigured } from "@/services/firebaseClient";
 import { colors } from "@/theme/colors";
 import { friendlyFirebaseAuthError } from "@/utils/firebaseAuthErrors";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 
 const DIAL_CODES = [
   { name: "United States", dial: "+1" },
@@ -138,6 +139,36 @@ export default function RegisterScreen() {
       const cred = await createUserWithEmailAndPassword(getFirebaseAuth(), nextEmail, password);
       const displayName = `${fn} ${ln}`.trim();
       await updateProfile(cred.user, { displayName }).catch(() => {});
+
+      // Store additional profile fields in Firestore for admin visibility.
+      // This lets you view user info in Firebase Console → Firestore Database → Data → users/{uid}.
+      const phoneE164 = `${dial}${digits}`;
+      try {
+        const db = getFirestoreDb();
+        await setDoc(
+          doc(db, "users", cred.user.uid),
+          {
+            uid: cred.user.uid,
+            email: nextEmail,
+            displayName,
+            firstName: fn,
+            lastName: ln,
+            phone: phoneE164,
+            phoneDialCode: dial,
+            phoneNational: digits,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          },
+          { merge: true }
+        );
+      } catch (e) {
+        Alert.alert(
+          "Profile not saved",
+          e instanceof Error
+            ? `${e.message}\n\nCheck your Firestore rules to allow users to write to users/{uid}.`
+            : "Check your Firestore rules to allow users to write to users/{uid}."
+        );
+      }
     } catch (e) {
       Alert.alert("Sign up failed", friendlyFirebaseAuthError(e));
     } finally {
