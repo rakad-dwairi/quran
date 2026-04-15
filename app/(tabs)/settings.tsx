@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { useMemo } from "react";
-import { Pressable, Switch, Text, View } from "react-native";
+import { Pressable, ScrollView, Switch, Text, View } from "react-native";
 import { AppHeader } from "@/components/AppHeader";
 import { IconButton } from "@/components/IconButton";
 import { NowPlayingButton } from "@/components/NowPlayingButton";
@@ -42,16 +42,19 @@ export default function SettingsScreen() {
   }, [tafsirsQuery.data, tafsirId]);
 
   return (
-    <Screen className="pt-6">
-      <AppHeader
-        title="Settings"
-        subtitle="Typography and preferences."
-        showBack
-        right={<NowPlayingButton />}
-      />
+    <Screen className="pt-6" padded={false}>
+      <View className="px-6">
+        <AppHeader
+          title="Settings"
+          subtitle="Typography and preferences."
+          showBack
+          right={<NowPlayingButton />}
+        />
+      </View>
 
-      <View className="rounded-2xl border border-border bg-surface p-4">
-        <Text className="font-uiSemibold text-base text-text">Reading</Text>
+      <ScrollView className="flex-1 px-6" contentContainerStyle={{ paddingBottom: 24 }}>
+        <View className="rounded-2xl border border-border bg-surface p-4">
+          <Text className="font-uiSemibold text-base text-text">Reading</Text>
 
         <Pressable
           className="mt-4 flex-row items-center justify-between"
@@ -119,10 +122,10 @@ export default function SettingsScreen() {
             thumbColor={showTranslation ? colors.primary : colors.bg}
           />
         </View>
-      </View>
+        </View>
 
-      <View className="mt-4 rounded-2xl border border-border bg-surface p-4">
-        <Text className="font-uiSemibold text-base text-text">Typography</Text>
+        <View className="mt-4 rounded-2xl border border-border bg-surface p-4">
+          <Text className="font-uiSemibold text-base text-text">Typography</Text>
 
         <View className="mt-4 flex-row items-center justify-between">
           <View>
@@ -169,45 +172,65 @@ export default function SettingsScreen() {
             />
           </View>
         </View>
-      </View>
+        </View>
 
-      <View className="mt-4 rounded-2xl border border-border bg-surface p-4">
-        <Text className="font-uiSemibold text-base text-text">Offline</Text>
-        <Pressable
-          className="mt-4 flex-row items-center justify-between"
-          onPress={() => router.push("/settings/downloads")}
-        >
-          <View className="flex-1 pr-4">
-            <Text className="font-uiMedium text-sm text-text">Downloads</Text>
-            <Text className="mt-1 font-ui text-sm text-muted">Manage downloaded text and audio.</Text>
-          </View>
-          <IconButton
-            name="chevron-right"
-            accessibilityLabel="Open downloads"
+        <View className="mt-4 rounded-2xl border border-border bg-surface p-4">
+          <Text className="font-uiSemibold text-base text-text">Offline</Text>
+          <Pressable
+            className="mt-4 flex-row items-center justify-between"
             onPress={() => router.push("/settings/downloads")}
-            color={colors.muted}
-          />
-        </Pressable>
-      </View>
+          >
+            <View className="flex-1 pr-4">
+              <Text className="font-uiMedium text-sm text-text">Downloads</Text>
+              <Text className="mt-1 font-ui text-sm text-muted">Manage downloaded text and audio.</Text>
+            </View>
+            <IconButton
+              name="chevron-right"
+              accessibilityLabel="Open downloads"
+              onPress={() => router.push("/settings/downloads")}
+              color={colors.muted}
+            />
+          </Pressable>
+        </View>
 
-      <View className="mt-4 rounded-2xl border border-border bg-surface p-4">
-        <Text className="font-uiSemibold text-base text-text">Cloud</Text>
-        <Pressable
-          className="mt-4 flex-row items-center justify-between"
-          onPress={() => router.push("/settings/account")}
-        >
-          <View className="flex-1 pr-4">
-            <Text className="font-uiMedium text-sm text-text">Cloud Sync</Text>
-            <Text className="mt-1 font-ui text-sm text-muted">Sync bookmarks and favorites across devices.</Text>
-          </View>
-          <IconButton
-            name="chevron-right"
-            accessibilityLabel="Open cloud sync"
+        <View className="mt-4 rounded-2xl border border-border bg-surface p-4">
+          <Text className="font-uiSemibold text-base text-text">Notifications</Text>
+          <Pressable
+            className="mt-4 flex-row items-center justify-between"
+            onPress={() => router.push("/settings/notifications")}
+          >
+            <View className="flex-1 pr-4">
+              <Text className="font-uiMedium text-sm text-text">Daily verse</Text>
+              <Text className="mt-1 font-ui text-sm text-muted">Get a daily verse reminder.</Text>
+            </View>
+            <IconButton
+              name="chevron-right"
+              accessibilityLabel="Open notifications settings"
+              onPress={() => router.push("/settings/notifications")}
+              color={colors.muted}
+            />
+          </Pressable>
+        </View>
+
+        <View className="mt-4 rounded-2xl border border-border bg-surface p-4">
+          <Text className="font-uiSemibold text-base text-text">Cloud</Text>
+          <Pressable
+            className="mt-4 flex-row items-center justify-between"
             onPress={() => router.push("/settings/account")}
-            color={colors.muted}
-          />
-        </Pressable>
-      </View>
+          >
+            <View className="flex-1 pr-4">
+              <Text className="font-uiMedium text-sm text-text">Cloud Sync</Text>
+              <Text className="mt-1 font-ui text-sm text-muted">Sync bookmarks and favorites across devices.</Text>
+            </View>
+            <IconButton
+              name="chevron-right"
+              accessibilityLabel="Open cloud sync"
+              onPress={() => router.push("/settings/account")}
+              color={colors.muted}
+            />
+          </Pressable>
+        </View>
+      </ScrollView>
     </Screen>
   );
 }

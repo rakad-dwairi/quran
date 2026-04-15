@@ -12,6 +12,10 @@ type SettingsState = {
   showTranslation: boolean;
   arabicFontSize: number;
   translationFontSize: number;
+
+  dailyVerseEnabled: boolean;
+  dailyVerseHour: number;
+  dailyVerseMinute: number;
 };
 
 type SettingsActions = {
@@ -22,6 +26,9 @@ type SettingsActions = {
   setShowTranslation: (showTranslation: boolean) => void;
   bumpArabicFontSize: (delta: number) => void;
   bumpTranslationFontSize: (delta: number) => void;
+
+  setDailyVerseEnabled: (enabled: boolean) => void;
+  setDailyVerseTime: (hour: number, minute: number) => void;
 };
 
 const DEFAULTS: SettingsState = {
@@ -35,6 +42,10 @@ const DEFAULTS: SettingsState = {
   showTranslation: true,
   arabicFontSize: 28,
   translationFontSize: 16,
+
+  dailyVerseEnabled: false,
+  dailyVerseHour: 8,
+  dailyVerseMinute: 0,
 };
 
 export const useSettingsStore = create<SettingsState & SettingsActions>()(
@@ -54,6 +65,9 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
         const next = Math.max(12, Math.min(26, get().translationFontSize + delta));
         set({ translationFontSize: next });
       },
+
+      setDailyVerseEnabled: (enabled) => set({ dailyVerseEnabled: enabled }),
+      setDailyVerseTime: (hour, minute) => set({ dailyVerseHour: hour, dailyVerseMinute: minute }),
     }),
     {
       name: "settings-v1",
@@ -62,4 +76,3 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
     }
   )
 );
-

@@ -2,8 +2,9 @@ import "../global.css";
 
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
-import { View } from "react-native";
+import * as Notifications from "expo-notifications";
+import { useEffect, useRef } from "react";
+import { Platform, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import * as SplashScreen from "expo-splash-screen";
 import { useFonts } from "expo-font";
@@ -20,6 +21,18 @@ import {
 import { AppProviders } from "@/providers/AppProviders";
 import { AuthProvider, useAuth } from "@/providers/AuthProvider";
 import { colors } from "@/theme/colors";
+
+if (Platform.OS !== "web") {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: false,
+      shouldSetBadge: false,
+    }),
+  });
+}
 
 SplashScreen.preventAutoHideAsync().catch(() => {
   // ignore (e.g. already hidden)
@@ -60,6 +73,7 @@ function RootNavigator() {
   const router = useRouter();
   const segments = useSegments();
   const { user, initializing } = useAuth();
+  const handledNotificationIds = useRef(new Set<string>());
 
   const inAuthGroup = segments[0] === "(auth)";
   const shouldGoToLogin = !user && !inAuthGroup;
@@ -73,6 +87,41 @@ function RootNavigator() {
       router.replace("/");
     }
   }, [initializing, shouldGoToLogin, shouldGoToApp, router]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const handle = (response: Notifications.NotificationResponse | null | undefined) => {
+      if (!response) return;
+      if (!user) return;
+
+      const id = response.notification.request.identifier;
+      if (handledNotificationIds.current.has(id)) return;
+      handledNotificationIds.current.add(id);
+
+      const data = response.notification.request.content.data as Record<string, unknown> | undefined;
+      if (!data || data.type !== "dailyVerse") return;
+
+      const chapterId = typeof data.chapterId === "number" ? data.chapterId : Number(data.chapterId);
+      const verseKey = typeof data.verseKey === "string" ? data.verseKey : "";
+      if (!Number.isFinite(chapterId) || chapterId <= 0 || !verseKey) return;
+
+      router.push({ pathname: `/surah/${chapterId}`, params: { verseKey } });
+    };
+
+    Notifications.getLastNotificationResponseAsync()
+      .then((res) => {
+        if (cancelled) return;
+        handle(res);
+      })
+      .catch(() => {});
+
+    const sub = Notifications.addNotificationResponseReceivedListener((res) => handle(res));
+    return () => {
+      cancelled = true;
+      sub.remove();
+    };
+  }, [router, user]);
 
   return (
     <View style={{ flex: 1 }}>
