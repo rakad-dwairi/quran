@@ -28,6 +28,36 @@ function mergeVerseMap(
   return out;
 }
 
+function authErrorMessage(e: unknown) {
+  const code = typeof e === "object" && e && "code" in e ? String((e as any).code) : null;
+  if (!code) return e instanceof Error ? e.message : "Please try again.";
+
+  switch (code) {
+    case "auth/invalid-email":
+      return "Please enter a valid email address.";
+    case "auth/missing-password":
+      return "Please enter your password.";
+    case "auth/weak-password":
+      return "Password is too weak. Use at least 6 characters.";
+    case "auth/email-already-in-use":
+      return "This email is already registered. Try signing in instead.";
+    case "auth/user-not-found":
+    case "auth/wrong-password":
+    case "auth/invalid-credential":
+      return "Wrong email or password (or the account doesn’t exist).";
+    case "auth/operation-not-allowed":
+      return "Email/Password sign-in is disabled in Firebase Console → Authentication.";
+    case "auth/network-request-failed":
+      return "Network error. Check your connection and try again.";
+    case "auth/too-many-requests":
+      return "Too many attempts. Please wait a bit and try again.";
+    case "auth/invalid-api-key":
+      return "Firebase API key is invalid. Double-check your `.env` values and restart Expo.";
+    default:
+      return e instanceof Error ? e.message : code;
+  }
+}
+
 export default function AccountScreen() {
   const configured = isFirebaseConfigured();
   const [user, setUser] = useState<User | null>(null);
@@ -154,6 +184,8 @@ export default function AccountScreen() {
             value={password}
             onChangeText={setPassword}
             secureTextEntry
+            autoCapitalize="none"
+            autoCorrect={false}
             placeholder="••••••••"
             placeholderTextColor="#94A3B8"
             className="mt-2 rounded-2xl border border-border bg-white px-4 py-3 font-ui text-base text-text"
@@ -163,11 +195,20 @@ export default function AccountScreen() {
             <Pressable
               className="flex-1 rounded-2xl bg-primary px-5 py-3 active:opacity-80"
               onPress={async () => {
+                const nextEmail = email.trim();
+                if (!nextEmail) {
+                  Alert.alert("Missing email", "Please enter your email.");
+                  return;
+                }
+                if (!password) {
+                  Alert.alert("Missing password", "Please enter your password.");
+                  return;
+                }
                 setBusy(true);
                 try {
-                  await signInWithEmailAndPassword(getFirebaseAuth(), email.trim(), password);
+                  await signInWithEmailAndPassword(getFirebaseAuth(), nextEmail, password);
                 } catch (e) {
-                  Alert.alert("Sign in failed", e instanceof Error ? e.message : "Please try again.");
+                  Alert.alert("Sign in failed", authErrorMessage(e));
                 } finally {
                   setBusy(false);
                 }
@@ -180,11 +221,24 @@ export default function AccountScreen() {
             <Pressable
               className="flex-1 rounded-2xl bg-white px-5 py-3 active:opacity-80"
               onPress={async () => {
+                const nextEmail = email.trim();
+                if (!nextEmail) {
+                  Alert.alert("Missing email", "Please enter your email.");
+                  return;
+                }
+                if (!password) {
+                  Alert.alert("Missing password", "Please enter a password (min 6 characters).");
+                  return;
+                }
+                if (password.length < 6) {
+                  Alert.alert("Weak password", "Password must be at least 6 characters.");
+                  return;
+                }
                 setBusy(true);
                 try {
-                  await createUserWithEmailAndPassword(getFirebaseAuth(), email.trim(), password);
+                  await createUserWithEmailAndPassword(getFirebaseAuth(), nextEmail, password);
                 } catch (e) {
-                  Alert.alert("Sign up failed", e instanceof Error ? e.message : "Please try again.");
+                  Alert.alert("Sign up failed", authErrorMessage(e));
                 } finally {
                   setBusy(false);
                 }
