@@ -1,6 +1,6 @@
 import "../global.css";
 
-import { Stack } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -17,6 +17,7 @@ import {
   NotoNaskhArabic_600SemiBold,
 } from "@expo-google-fonts/noto-naskh-arabic";
 import { AppProviders } from "@/providers/AppProviders";
+import { AuthProvider, useAuth } from "@/providers/AuthProvider";
 import { colors } from "@/theme/colors";
 
 SplashScreen.preventAutoHideAsync().catch(() => {
@@ -45,14 +46,42 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AppProviders>
-        <StatusBar style="dark" />
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: colors.bg },
-          }}
-        />
+        <AuthProvider>
+          <StatusBar style="dark" />
+          <RootNavigator />
+        </AuthProvider>
       </AppProviders>
     </GestureHandlerRootView>
+  );
+}
+
+function RootNavigator() {
+  const router = useRouter();
+  const segments = useSegments();
+  const { user, initializing } = useAuth();
+
+  const inAuthGroup = segments[0] === "(auth)";
+
+  useEffect(() => {
+    if (initializing) return;
+    if (!user && !inAuthGroup) {
+      router.replace("/login");
+    } else if (user && inAuthGroup) {
+      router.replace("/");
+    }
+  }, [initializing, user, inAuthGroup, router]);
+
+  // Prevent rendering the wrong route while we redirect.
+  if (initializing) return null;
+  if (!user && !inAuthGroup) return null;
+  if (user && inAuthGroup) return null;
+
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: colors.bg },
+      }}
+    />
   );
 }

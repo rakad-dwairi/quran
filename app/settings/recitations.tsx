@@ -5,6 +5,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { Screen } from "@/components/Screen";
 import { useRecitationsQuery } from "@/hooks/quranQueries";
 import { useSettingsStore } from "@/store/settingsStore";
+import { colors } from "@/theme/colors";
 
 export default function RecitationsScreen() {
   const { recitationId, setRecitationId } = useSettingsStore();
@@ -31,7 +32,7 @@ export default function RecitationsScreen() {
         value={filter}
         onChangeText={setFilter}
         placeholder="Filter reciters…"
-        placeholderTextColor="#94A3B8"
+        placeholderTextColor={colors.muted}
         autoCapitalize="none"
         autoCorrect={false}
         className="rounded-2xl border border-border bg-surface px-4 py-3 font-ui text-base text-text"
@@ -84,4 +85,3 @@ export default function RecitationsScreen() {
     </Screen>
   );
 }
-

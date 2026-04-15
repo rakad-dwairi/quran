@@ -9,6 +9,7 @@ import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useChaptersQuery, useSearchQuery } from "@/hooks/quranQueries";
 import type { SearchResult } from "@/services/quranComApi";
 import { useSettingsStore } from "@/store/settingsStore";
+import { colors } from "@/theme/colors";
 
 function parseVerseKey(input: string): string | null {
   const trimmed = input.trim();
@@ -60,7 +61,7 @@ export default function SearchScreen() {
         value={query}
         onChangeText={setQuery}
         placeholder="Search (e.g., mercy) or jump (e.g., 2:255)"
-        placeholderTextColor="#94A3B8"
+        placeholderTextColor={colors.muted}
         autoCapitalize="none"
         autoCorrect={false}
         returnKeyType="search"
@@ -153,4 +154,3 @@ export default function SearchScreen() {
     </Screen>
   );
 }
-
