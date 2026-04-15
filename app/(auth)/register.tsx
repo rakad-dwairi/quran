@@ -53,7 +53,7 @@ function Field({
   textContentType?: React.ComponentProps<typeof TextInput>["textContentType"];
 }) {
   return (
-    <View className="flex-row items-center rounded-2xl border border-border bg-white px-4 py-3">
+    <View className="flex-row items-center rounded-2xl border border-border bg-bg px-4 py-3">
       <MaterialCommunityIcons name={icon} size={20} color={colors.muted} />
       <TextInput
         value={value}
@@ -206,7 +206,7 @@ export default function RegisterScreen() {
         <Text className="mt-4 mb-2 font-uiMedium text-sm text-text">Phone</Text>
         <View className="flex-row gap-3">
           <Pressable
-            className="flex-row items-center rounded-2xl border border-border bg-white px-4 py-3 active:opacity-80"
+            className="flex-row items-center rounded-2xl border border-border bg-bg px-4 py-3 active:opacity-80"
             onPress={() => setPickerOpen(true)}
           >
             <Text className="font-uiSemibold text-base text-text">{dial}</Text>
@@ -260,11 +260,13 @@ export default function RegisterScreen() {
           onPress={() => handleRegister()}
           disabled={busy}
         >
-          <Text className="text-center font-uiSemibold text-lg text-white">{busy ? "Working…" : "Sign up"}</Text>
+          <Text className="text-center font-uiSemibold text-lg text-primaryForeground">
+            {busy ? "Working…" : "Sign up"}
+          </Text>
         </Pressable>
 
         {!configured ? (
-          <View className="mt-6 rounded-2xl border border-border bg-white px-4 py-3">
+          <View className="mt-6 rounded-2xl border border-border bg-bg px-4 py-3">
             <Text className="font-uiSemibold text-sm text-text">Firebase not configured</Text>
             <Text className="mt-1 font-ui text-sm text-muted">
               Add your Firebase web config values to `.env`, then restart Expo with `npm start -c`.

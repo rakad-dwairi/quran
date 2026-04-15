@@ -63,7 +63,7 @@ export default function WelcomeScreen() {
   const englishText = useMemo(() => englishWords.slice(0, englishWordsVisible).join(" "), [englishWords, englishWordsVisible]);
 
   return (
-    <Screen padded={false} className="bg-[#0D3A2E]">
+    <Screen padded={false} className="bg-primary">
       <Stack.Screen options={{ headerShown: false }} />
       <Pattern />
 
@@ -78,7 +78,7 @@ export default function WelcomeScreen() {
             style={{
               fontSize: 34,
               lineHeight: 62,
-              color: "#D6B775",
+              color: colors.accent,
               writingDirection: "rtl",
               textAlign: "center",
             }}
@@ -86,7 +86,7 @@ export default function WelcomeScreen() {
             {arabicText}
           </Text>
 
-          <View className="mt-6 h-px w-28" style={{ backgroundColor: "rgba(214,183,117,0.65)" }} />
+          <View className="mt-6 h-px w-28" style={{ backgroundColor: "rgba(206,165,85,0.65)" }} />
 
           <Animated.Text
             style={{ opacity: fade }}
@@ -112,8 +112,8 @@ export default function WelcomeScreen() {
             className="mt-7 flex-row items-center justify-center rounded-2xl bg-primary px-5 py-4 active:opacity-80"
             onPress={() => router.push("/login")}
           >
-            <MaterialCommunityIcons name="login" size={22} color="white" />
-            <Text className="ml-3 font-uiSemibold text-lg text-white">Sign In to Your Account</Text>
+            <MaterialCommunityIcons name="login" size={22} color={colors.primaryForeground} />
+            <Text className="ml-3 font-uiSemibold text-lg text-primaryForeground">Sign In to Your Account</Text>
           </Pressable>
 
           <View className="mt-4 flex-row items-center">

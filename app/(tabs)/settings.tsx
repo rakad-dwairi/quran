@@ -115,8 +115,8 @@ export default function SettingsScreen() {
           <Switch
             value={showTranslation}
             onValueChange={setShowTranslation}
-            trackColor={{ false: "#CBD5E1", true: colors.primaryMuted }}
-            thumbColor={showTranslation ? colors.primary : "#F1F5F9"}
+            trackColor={{ false: colors.border, true: colors.primaryMuted }}
+            thumbColor={showTranslation ? colors.primary : colors.bg}
           />
         </View>
       </View>
@@ -135,14 +135,14 @@ export default function SettingsScreen() {
               accessibilityLabel="Decrease Arabic font size"
               onPress={() => bumpArabicFontSize(-2)}
               color={colors.text}
-              className="bg-white"
+              className="bg-bg"
             />
             <IconButton
               name="plus"
               accessibilityLabel="Increase Arabic font size"
               onPress={() => bumpArabicFontSize(2)}
               color={colors.text}
-              className="bg-white"
+              className="bg-bg"
             />
           </View>
         </View>
@@ -158,14 +158,14 @@ export default function SettingsScreen() {
               accessibilityLabel="Decrease translation font size"
               onPress={() => bumpTranslationFontSize(-1)}
               color={colors.text}
-              className="bg-white"
+              className="bg-bg"
             />
             <IconButton
               name="plus"
               accessibilityLabel="Increase translation font size"
               onPress={() => bumpTranslationFontSize(1)}
               color={colors.text}
-              className="bg-white"
+              className="bg-bg"
             />
           </View>
         </View>

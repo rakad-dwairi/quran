@@ -86,7 +86,7 @@ export function VerseRow({
                 createdAt: Date.now(),
               })
             }
-            color={favorited ? "#DC2626" : colors.muted}
+            color={favorited ? colors.danger : colors.muted}
           />
         </View>
       </View>

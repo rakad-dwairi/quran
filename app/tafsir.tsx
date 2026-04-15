@@ -7,6 +7,7 @@ import { Screen } from "@/components/Screen";
 import { fetchAiTafsir, isAiTafsirConfigured, type AiTafsirResponse } from "@/services/aiTafsirClient";
 import { useTafsirQuery, useVerseByKeyQuery } from "@/hooks/quranQueries";
 import { stripHtmlTags } from "@/utils/html";
+import { colors } from "@/theme/colors";
 import { useSettingsStore } from "@/store/settingsStore";
 
 export default function TafsirScreen() {
@@ -92,7 +93,7 @@ export default function TafsirScreen() {
               contentWidth={width - 48}
               source={{ html }}
               baseStyle={{
-                color: "#0F172A",
+                color: colors.text,
                 fontFamily: "Inter_400Regular",
                 lineHeight: 22,
               }}
@@ -142,7 +143,7 @@ export default function TafsirScreen() {
               }}
               disabled={aiBusy}
             >
-              <Text className="text-center font-uiSemibold text-white">
+              <Text className="text-center font-uiSemibold text-primaryForeground">
                 {aiBusy ? "Generating…" : "Generate summary"}
               </Text>
             </Pressable>
@@ -172,4 +173,3 @@ export default function TafsirScreen() {
     </Screen>
   );
 }
-

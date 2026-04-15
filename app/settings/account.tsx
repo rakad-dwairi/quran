@@ -115,11 +115,13 @@ export default function AccountScreen() {
             onPress={() => syncNow()}
             disabled={busy}
           >
-            <Text className="text-center font-uiSemibold text-white">{busy ? "Working…" : "Sync now"}</Text>
+            <Text className="text-center font-uiSemibold text-primaryForeground">
+              {busy ? "Working…" : "Sync now"}
+            </Text>
           </Pressable>
 
           <Pressable
-            className="mt-3 rounded-2xl bg-white px-5 py-3 active:opacity-80"
+            className="mt-3 rounded-2xl bg-bg px-5 py-3 active:opacity-80"
             onPress={async () => {
               setBusy(true);
               try {
@@ -148,7 +150,7 @@ export default function AccountScreen() {
             keyboardType="email-address"
             placeholder="you@example.com"
             placeholderTextColor={colors.muted}
-            className="mt-2 rounded-2xl border border-border bg-white px-4 py-3 font-ui text-base text-text"
+            className="mt-2 rounded-2xl border border-border bg-bg px-4 py-3 font-ui text-base text-text"
           />
 
           <Text className="mt-4 font-uiMedium text-sm text-text">Password</Text>
@@ -160,7 +162,7 @@ export default function AccountScreen() {
             autoCorrect={false}
             placeholder="••••••••"
             placeholderTextColor={colors.muted}
-            className="mt-2 rounded-2xl border border-border bg-white px-4 py-3 font-ui text-base text-text"
+            className="mt-2 rounded-2xl border border-border bg-bg px-4 py-3 font-ui text-base text-text"
           />
 
           <View className="mt-5 flex-row gap-3">
@@ -187,11 +189,13 @@ export default function AccountScreen() {
               }}
               disabled={busy}
             >
-              <Text className="text-center font-uiSemibold text-white">{busy ? "Working…" : "Sign in"}</Text>
+              <Text className="text-center font-uiSemibold text-primaryForeground">
+                {busy ? "Working…" : "Sign in"}
+              </Text>
             </Pressable>
 
             <Pressable
-              className="flex-1 rounded-2xl bg-white px-5 py-3 active:opacity-80"
+              className="flex-1 rounded-2xl bg-bg px-5 py-3 active:opacity-80"
               onPress={async () => {
                 const nextEmail = email.trim();
                 if (!nextEmail) {

@@ -51,7 +51,7 @@ export default function RecitationsScreen() {
             className="mt-4 self-start rounded-2xl bg-primary px-4 py-2"
             onPress={() => recitationsQuery.refetch()}
           >
-            <Text className="font-uiSemibold text-white">Retry</Text>
+            <Text className="font-uiSemibold text-primaryForeground">Retry</Text>
           </Pressable>
         </View>
       ) : (

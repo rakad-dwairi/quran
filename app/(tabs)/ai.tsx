@@ -19,7 +19,7 @@ export default function AiTabScreen() {
             className="rounded-2xl bg-primary px-5 py-3 active:opacity-80"
             onPress={() => router.push("/quran")}
           >
-            <Text className="text-center font-uiSemibold text-white">Go to Quran</Text>
+            <Text className="text-center font-uiSemibold text-primaryForeground">Go to Quran</Text>
           </Pressable>
 
           <Pressable
@@ -33,4 +33,3 @@ export default function AiTabScreen() {
     </Screen>
   );
 }
-

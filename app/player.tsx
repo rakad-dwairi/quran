@@ -61,7 +61,7 @@ export default function PlayerScreen() {
 
           <View className="mt-6 flex-row items-center justify-between">
             <Pressable
-              className={`rounded-2xl px-5 py-3 active:opacity-80 ${mode === "verse" ? "bg-white" : "bg-border"}`}
+              className={`rounded-2xl px-5 py-3 active:opacity-80 ${mode === "verse" ? "bg-bg" : "bg-border"}`}
               onPress={() => previous()}
               disabled={mode !== "verse"}
             >
@@ -72,11 +72,11 @@ export default function PlayerScreen() {
               className="rounded-2xl bg-primary px-8 py-3 active:opacity-80"
               onPress={() => togglePlayPause()}
             >
-              <Text className="font-uiSemibold text-sm text-white">{isPlaying ? "Pause" : "Play"}</Text>
+              <Text className="font-uiSemibold text-sm text-primaryForeground">{isPlaying ? "Pause" : "Play"}</Text>
             </Pressable>
 
             <Pressable
-              className={`rounded-2xl px-5 py-3 active:opacity-80 ${mode === "verse" ? "bg-white" : "bg-border"}`}
+              className={`rounded-2xl px-5 py-3 active:opacity-80 ${mode === "verse" ? "bg-bg" : "bg-border"}`}
               onPress={() => next()}
               disabled={mode !== "verse"}
             >

@@ -96,7 +96,7 @@ export default function BookmarksScreen() {
                         router.push({ pathname: `/surah/${item.chapterId}`, params: { verseKey: item.verseKey } })
                       }
                       color={colors.text}
-                      className="bg-white"
+                      className="bg-bg"
                     />
                     <IconButton
                       name="trash-can-outline"
@@ -106,7 +106,7 @@ export default function BookmarksScreen() {
                         else removeFavorite(item.verseKey);
                       }}
                       color={colors.danger}
-                      className="bg-white"
+                      className="bg-bg"
                     />
                   </View>
                 </View>

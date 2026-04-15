@@ -26,7 +26,7 @@ function Field({
   textContentType?: React.ComponentProps<typeof TextInput>["textContentType"];
 }) {
   return (
-    <View className="flex-row items-center rounded-2xl border border-border bg-white px-4 py-3">
+    <View className="flex-row items-center rounded-2xl border border-border bg-bg px-4 py-3">
       <MaterialCommunityIcons name={icon} size={20} color={colors.muted} />
       <TextInput
         value={value}
@@ -138,7 +138,7 @@ export default function LoginScreen() {
 
       <View className="mt-8 rounded-3xl border border-border bg-surface px-5 py-6">
         <Pressable
-          className="flex-row items-center justify-center rounded-2xl border border-border bg-white px-5 py-4 active:opacity-80"
+          className="flex-row items-center justify-center rounded-2xl border border-border bg-bg px-5 py-4 active:opacity-80"
           onPress={() => {}}
         >
           <MaterialCommunityIcons name="google" size={20} color="#DB4437" />
@@ -176,7 +176,7 @@ export default function LoginScreen() {
           onPress={() => handleSignIn()}
           disabled={busy}
         >
-          <Text className="text-center font-uiSemibold text-lg text-white">{busy ? "Working…" : "Sign in"}</Text>
+          <Text className="text-center font-uiSemibold text-lg text-primaryForeground">{busy ? "Working…" : "Sign in"}</Text>
         </Pressable>
 
         <Pressable className="mt-5 self-center active:opacity-70" onPress={() => handleForgotPassword()} disabled={busy}>
@@ -191,7 +191,7 @@ export default function LoginScreen() {
         </View>
 
         {!configured ? (
-          <View className="mt-6 rounded-2xl border border-border bg-white px-4 py-3">
+          <View className="mt-6 rounded-2xl border border-border bg-bg px-4 py-3">
             <Text className="font-uiSemibold text-sm text-text">Firebase not configured</Text>
             <Text className="mt-1 font-ui text-sm text-muted">
               Add your Firebase web config values to `.env`, then restart Expo with `npm start -c`.

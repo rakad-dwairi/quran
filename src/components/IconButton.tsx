@@ -1,6 +1,7 @@
 import type { ComponentProps } from "react";
 import { Pressable } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { colors } from "@/theme/colors";
 
 type IconName = ComponentProps<typeof MaterialCommunityIcons>["name"];
 
@@ -8,7 +9,7 @@ export function IconButton({
   name,
   onPress,
   accessibilityLabel,
-  color = "#0F172A",
+  color = colors.text,
   size = 22,
   className,
 }: {
@@ -31,4 +32,3 @@ export function IconButton({
     </Pressable>
   );
 }
-

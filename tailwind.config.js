@@ -5,16 +5,35 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Warm green/brown palette
-        bg: "#FAF7F0",
-        surface: "#F2EEE4",
-        border: "#E0D7C8",
-        text: "#2B2418",
-        muted: "#6B5E4B",
-        primary: "#5C724A",
-        primaryMuted: "#5C724A1A",
-        accent: "#8B6F47",
-        danger: "#B42318",
+        // Updated palette (green + gold)
+        bg: "#FAF8F5",
+        surface: "#F5F3EF",
+        border: "#E0DBD1",
+        text: "#0F241D",
+        muted: "#57756B",
+        mutedBg: "#EFECE7",
+
+        primary: "#0E4E39",
+        primaryForeground: "#FAF8F5",
+        primaryMuted: "#0E4E391A",
+
+        secondary: "#EDE4D4",
+        secondaryForeground: "#0F241D",
+
+        accent: "#CEA555",
+        accentForeground: "#0F241D",
+
+        danger: "#EF4444",
+        dangerForeground: "#FAFAFA",
+
+        input: "#E0DBD1",
+        ring: "#0E4E39",
+
+        chart1: "#0E4E39",
+        chart2: "#CEA555",
+        chart3: "#367D65",
+        chart4: "#D1BD94",
+        chart5: "#669988",
       },
       fontFamily: {
         ui: ["Inter_400Regular"],

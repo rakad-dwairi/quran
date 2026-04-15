@@ -142,7 +142,7 @@ export function SurahAudioControls({
       <View className="mt-4 flex-row gap-3">
         <Pressable
           className={`flex-1 rounded-2xl px-4 py-3 active:opacity-80 ${
-            isChapterMode ? "bg-primaryMuted" : "bg-white"
+            isChapterMode ? "bg-primaryMuted" : "bg-bg"
           }`}
           onPress={async () => {
             if (isChapterMode) {
@@ -163,7 +163,7 @@ export function SurahAudioControls({
 
         <Pressable
           className={`flex-1 rounded-2xl px-4 py-3 active:opacity-80 ${
-            isVerseMode ? "bg-primaryMuted" : "bg-white"
+            isVerseMode ? "bg-primaryMuted" : "bg-bg"
           }`}
           onPress={async () => {
             if (isVerseMode) {
@@ -211,13 +211,13 @@ export function SurahAudioControls({
           {isVerseMode ? (
             <View className="mt-3 flex-row items-center justify-between">
               <Pressable
-                className="rounded-2xl bg-white px-4 py-2 active:opacity-80"
+                className="rounded-2xl bg-bg px-4 py-2 active:opacity-80"
                 onPress={() => previous()}
               >
                 <Text className="font-uiSemibold text-sm text-text">Prev</Text>
               </Pressable>
               <Pressable
-                className="rounded-2xl bg-white px-4 py-2 active:opacity-80"
+                className="rounded-2xl bg-bg px-4 py-2 active:opacity-80"
                 onPress={() => next()}
               >
                 <Text className="font-uiSemibold text-sm text-text">Next</Text>

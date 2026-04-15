@@ -108,7 +108,7 @@ export default function DownloadsScreen() {
                   </View>
 
                   <Pressable
-                    className="rounded-2xl bg-white px-4 py-2 active:opacity-80"
+                    className="rounded-2xl bg-bg px-4 py-2 active:opacity-80"
                     onPress={async () => {
                       setBusy(true);
                       try {
@@ -134,4 +134,3 @@ export default function DownloadsScreen() {
     </Screen>
   );
 }
-

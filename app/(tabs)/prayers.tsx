@@ -189,7 +189,7 @@ export default function PrayersScreen() {
             className="mt-5 self-start rounded-2xl bg-primary px-5 py-3 active:opacity-80"
             onPress={() => refresh()}
           >
-            <Text className="font-uiSemibold text-white">{busy ? "Refreshing…" : "Retry"}</Text>
+            <Text className="font-uiSemibold text-primaryForeground">{busy ? "Refreshing…" : "Retry"}</Text>
           </Pressable>
         </View>
       ) : permission && permission !== "granted" ? (
@@ -202,7 +202,7 @@ export default function PrayersScreen() {
             className="mt-5 self-start rounded-2xl bg-primary px-5 py-3 active:opacity-80"
             onPress={() => refresh()}
           >
-            <Text className="font-uiSemibold text-white">Enable location</Text>
+            <Text className="font-uiSemibold text-primaryForeground">Enable location</Text>
           </Pressable>
         </View>
       ) : computed ? (
@@ -276,11 +276,10 @@ export default function PrayersScreen() {
             className="mt-5 self-start rounded-2xl bg-primary px-5 py-3 active:opacity-80"
             onPress={() => refresh()}
           >
-            <Text className="font-uiSemibold text-white">{busy ? "Refreshing…" : "Refresh"}</Text>
+            <Text className="font-uiSemibold text-primaryForeground">{busy ? "Refreshing…" : "Refresh"}</Text>
           </Pressable>
         </View>
       )}
     </Screen>
   );
 }
-

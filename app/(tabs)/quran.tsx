@@ -34,7 +34,7 @@ export default function QuranScreen() {
             className="mt-5 rounded-2xl bg-primary px-5 py-3"
             onPress={() => chaptersQuery.refetch()}
           >
-            <Text className="font-uiSemibold text-white">Retry</Text>
+            <Text className="font-uiSemibold text-primaryForeground">Retry</Text>
           </Pressable>
         </View>
       ) : (
@@ -53,4 +53,3 @@ export default function QuranScreen() {
     </Screen>
   );
 }
-
