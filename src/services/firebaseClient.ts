@@ -54,13 +54,14 @@ export function getFirebaseAuth(): Auth {
   if (auth) return auth;
   const firebaseApp = getFirebaseApp();
 
-  // React Native persistence: Firebase v12+ no longer ships `getReactNativePersistence`,
-  // so we provide a minimal AsyncStorage-backed persistence adapter.
   if (Platform.OS === "web") {
     auth = getAuth(firebaseApp);
   } else {
-    const asyncStoragePersistence = {
-      type: "LOCAL",
+    // Firebase Auth expects `persistence` to be a **class** (constructed with `new`),
+    // not an object instance. This minimal class wraps AsyncStorage.
+    const ReactNativeAsyncStoragePersistence = class {
+      type = "LOCAL";
+
       async _isAvailable() {
         try {
           await AsyncStorage.setItem("__firebase_auth_test__", "1");
@@ -69,24 +70,27 @@ export function getFirebaseAuth(): Auth {
         } catch {
           return false;
         }
-      },
-      async _set(key: string, value: unknown) {
-        await AsyncStorage.setItem(key, JSON.stringify(value));
-      },
+      }
+
+      _set(key: string, value: unknown) {
+        return AsyncStorage.setItem(key, JSON.stringify(value));
+      }
+
       async _get(key: string) {
         const raw = await AsyncStorage.getItem(key);
         return raw ? JSON.parse(raw) : null;
-      },
-      async _remove(key: string) {
-        await AsyncStorage.removeItem(key);
-      },
-      _addListener() {},
-      _removeListener() {},
-    } as any;
+      }
+
+      _remove(key: string) {
+        return AsyncStorage.removeItem(key);
+      }
+
+      _addListener() {}
+      _removeListener() {}
+    };
 
     auth = initializeAuth(firebaseApp, {
-      // Firebase accepts Persistence but uses internal methods at runtime.
-      persistence: asyncStoragePersistence,
+      persistence: ReactNativeAsyncStoragePersistence as any,
     });
   }
   return auth;
