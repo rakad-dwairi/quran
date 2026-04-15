@@ -24,16 +24,17 @@ export function VerseActionsSheet({
 }) {
   const insets = useSafeAreaInsets();
 
-  if (!open || !verse) return null;
+  const verseKey = verse?.verse_key ?? "";
+  const translation = verse?.translations?.[0]?.textPlain;
+  const chapterId = verseKey ? Number(verseKey.split(":")[0]) : 0;
 
-  const verseKey = verse.verse_key;
-  const translation = verse.translations?.[0]?.textPlain;
-  const chapterId = Number(verseKey.split(":")[0]);
-
-  const bookmarked = useLibraryStore((s) => !!s.bookmarks[verseKey]);
-  const favorited = useLibraryStore((s) => !!s.favorites[verseKey]);
+  // Hooks must be called unconditionally on every render. Avoid early-returns before hooks.
+  const bookmarked = useLibraryStore((s) => (verseKey ? !!s.bookmarks[verseKey] : false));
+  const favorited = useLibraryStore((s) => (verseKey ? !!s.favorites[verseKey] : false));
   const toggleBookmark = useLibraryStore((s) => s.toggleBookmark);
   const toggleFavorite = useLibraryStore((s) => s.toggleFavorite);
+
+  if (!open || !verse) return null;
 
   return (
     <Modal visible transparent animationType="slide" onRequestClose={onClose}>
@@ -153,4 +154,3 @@ export function VerseActionsSheet({
     </Modal>
   );
 }
-
