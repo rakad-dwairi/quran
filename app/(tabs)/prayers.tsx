@@ -1,7 +1,8 @@
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
-import { CalculationMethod, Coordinates, Madhab, PrayerTimes } from "adhan";
+import { CalculationMethod, Coordinates, Madhab, PrayerTimes, Qibla } from "adhan";
 import { AppHeader } from "@/components/AppHeader";
 import { IconButton } from "@/components/IconButton";
 import { NowPlayingButton } from "@/components/NowPlayingButton";
@@ -16,6 +17,11 @@ function formatTime(value: Date) {
   return value.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
 }
 
+function formatDegrees(value: number) {
+  const normalized = ((value % 360) + 360) % 360;
+  return `${Math.round(normalized)}°`;
+}
+
 function buildPrayerTimes(coords: { latitude: number; longitude: number }, date: Date) {
   const coordinates = new Coordinates(coords.latitude, coords.longitude);
   const params = CalculationMethod.MuslimWorldLeague();
@@ -24,6 +30,7 @@ function buildPrayerTimes(coords: { latitude: number; longitude: number }, date:
   return {
     coordinates,
     params,
+    qiblaDegrees: Qibla(coordinates),
     times: {
       Fajr: times.fajr,
       Sunrise: times.sunrise,
@@ -56,6 +63,8 @@ export default function PrayersScreen() {
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   const [place, setPlace] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const [heading, setHeading] = useState<number | null>(null);
 
   const refresh = useCallback(async () => {
     setBusy(true);
@@ -98,7 +107,7 @@ export default function PrayersScreen() {
         setPlace(null);
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Couldn’t load location.");
+      setError(e instanceof Error ? e.message : "Couldn't load location.");
     } finally {
       setBusy(false);
     }
@@ -108,12 +117,46 @@ export default function PrayersScreen() {
     refresh();
   }, [refresh]);
 
+  useEffect(() => {
+    if (permission !== "granted") {
+      setHeading(null);
+      return;
+    }
+
+    let subscription: Location.LocationSubscription | null = null;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        subscription = await Location.watchHeadingAsync((h) => {
+          if (cancelled) return;
+          const nextHeading = h.trueHeading > 0 ? h.trueHeading : h.magHeading;
+          if (!Number.isFinite(nextHeading)) return;
+          setHeading(nextHeading);
+        });
+      } catch {
+        setHeading(null);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      subscription?.remove();
+    };
+  }, [permission]);
+
   const computed = useMemo(() => {
     if (!coords) return null;
-    const { coordinates, params, times } = buildPrayerTimes(coords, new Date());
+    const { coordinates, params, times, qiblaDegrees } = buildPrayerTimes(coords, new Date());
     const next = getNextPrayer(times, { coordinates, params });
-    return { times, next };
+    return { times, next, qiblaDegrees };
   }, [coords]);
+
+  const qiblaRotation = useMemo(() => {
+    if (!computed) return null;
+    if (heading === null) return computed.qiblaDegrees;
+    return ((computed.qiblaDegrees - heading) % 360 + 360) % 360;
+  }, [computed, heading]);
 
   return (
     <Screen className="pt-6">
@@ -140,7 +183,7 @@ export default function PrayersScreen() {
         </View>
       ) : error ? (
         <View className="rounded-2xl border border-border bg-surface px-4 py-6">
-          <Text className="font-uiSemibold text-base text-text">Couldn’t load prayer times</Text>
+          <Text className="font-uiSemibold text-base text-text">Couldn't load prayer times</Text>
           <Text className="mt-2 font-ui text-muted">{error}</Text>
           <Pressable
             className="mt-5 self-start rounded-2xl bg-primary px-5 py-3 active:opacity-80"
@@ -153,7 +196,7 @@ export default function PrayersScreen() {
         <View className="rounded-2xl border border-border bg-surface px-4 py-6">
           <Text className="font-uiSemibold text-base text-text">Location permission needed</Text>
           <Text className="mt-2 font-ui text-muted">
-            Enable location access to show accurate prayer times near you.
+            Enable location access to show accurate prayer times and Qibla near you.
           </Text>
           <Pressable
             className="mt-5 self-start rounded-2xl bg-primary px-5 py-3 active:opacity-80"
@@ -165,6 +208,38 @@ export default function PrayersScreen() {
       ) : computed ? (
         <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 24 }}>
           <View className="rounded-2xl border border-border bg-surface p-4">
+            <Text className="font-uiSemibold text-base text-text">Qibla</Text>
+            <Text className="mt-1 font-ui text-sm text-muted">
+              {heading === null
+                ? `Direction to Makkah: ${formatDegrees(computed.qiblaDegrees)}`
+                : "Rotate your phone until the arrow points up."}
+            </Text>
+
+            <View className="mt-5 items-center">
+              <View className="h-56 w-56 items-center justify-center rounded-full border border-border bg-bg">
+                <Text className="absolute top-4 font-uiSemibold text-xs text-muted">N</Text>
+                <Text className="absolute bottom-4 font-ui text-xs text-muted">
+                  {formatDegrees(computed.qiblaDegrees)}
+                </Text>
+
+                {qiblaRotation !== null ? (
+                  <View style={{ transform: [{ rotate: `${qiblaRotation}deg` }] }}>
+                    <MaterialCommunityIcons name="navigation" size={56} color={colors.primary} />
+                  </View>
+                ) : null}
+              </View>
+
+              {heading === null ? (
+                <Text className="mt-3 text-center font-ui text-xs text-muted">
+                  Compass heading isn’t available on many simulators. This will animate on a real device.
+                </Text>
+              ) : (
+                <Text className="mt-3 font-ui text-xs text-muted">Heading: {formatDegrees(heading)}</Text>
+              )}
+            </View>
+          </View>
+
+          <View className="mt-4 rounded-2xl border border-border bg-surface p-4">
             <View className="rounded-2xl bg-primaryMuted px-4 py-4">
               <Text className="font-uiSemibold text-base text-text">Next</Text>
               <Text className="mt-1 font-ui text-muted">
