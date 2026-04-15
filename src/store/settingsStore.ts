@@ -3,7 +3,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 type ThemeMode = "light" | "dark" | "sepia";
-type VerseLayout = "cards" | "page";
+type VerseLayout = "cards" | "mushaf";
 
 type SettingsState = {
   theme: ThemeMode;
@@ -77,7 +77,13 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
     {
       name: "settings-v1",
       storage: createJSONStorage(() => AsyncStorage),
-      version: 1,
+      version: 2,
+      migrate: (persisted) => {
+        if (!persisted || typeof persisted !== "object") return persisted as any;
+        const state = { ...(persisted as Record<string, unknown>) };
+        if (state.verseLayout === "page") state.verseLayout = "mushaf";
+        return state as any;
+      },
     }
   )
 );

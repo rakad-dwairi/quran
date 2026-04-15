@@ -3,10 +3,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, Text, View } from "react-native";
 import { AppHeader } from "@/components/AppHeader";
 import { NowPlayingButton } from "@/components/NowPlayingButton";
+import { MushafPage } from "@/components/MushafPage";
 import { Screen } from "@/components/Screen";
 import { SurahAudioControls } from "@/components/SurahAudioControls";
 import { VerseActionsSheet } from "@/components/VerseActionsSheet";
-import { VersePageRow } from "@/components/VersePageRow";
 import { VerseRow } from "@/components/VerseRow";
 import { useChapterAudioQuery, useChapterVersesQuery, useChaptersQuery } from "@/hooks/quranQueries";
 import type { Verse } from "@/services/quranComApi";
@@ -60,7 +60,8 @@ export default function SurahScreen() {
     recitationId,
   });
 
-  const listRef = useRef<FlatList<Verse>>(null);
+  const verseListRef = useRef<FlatList<Verse>>(null);
+  const pageListRef = useRef<FlatList<{ pageNumber: number | null; verses: Verse[] }>>(null);
   const highlightKey = typeof verseKey === "string" ? verseKey : undefined;
   const [highlightedVerseKey, setHighlightedVerseKey] = useState<string | undefined>(highlightKey);
   const [actionsVerse, setActionsVerse] = useState<Verse | null>(null);
@@ -71,16 +72,64 @@ export default function SurahScreen() {
 
   useEffect(() => {
     if (!highlightKey) return;
-    if (!versesQuery.data) return;
-    const index = versesQuery.data.findIndex((v) => v.verse_key === highlightKey);
+    const verses = versesQuery.data ?? offlineVerses;
+    if (!verses) return;
+
+    if (verseLayout === "mushaf") {
+      const match = verses.find((v) => v.verse_key === highlightKey);
+      const pageNumber = match?.page_number ?? null;
+      if (!pageNumber) return;
+
+      const pageIndex = (() => {
+        let i = 0;
+        const seen = new Set<number>();
+        for (const v of verses) {
+          const p = v.page_number;
+          if (!p || seen.has(p)) continue;
+          seen.add(p);
+          if (p === pageNumber) return i;
+          i += 1;
+        }
+        return -1;
+      })();
+      if (pageIndex < 0) return;
+
+      const t = setTimeout(() => {
+        pageListRef.current?.scrollToIndex({ index: pageIndex, animated: true });
+      }, 300);
+
+      return () => clearTimeout(t);
+    }
+
+    const index = verses.findIndex((v) => v.verse_key === highlightKey);
     if (index < 0) return;
 
     const t = setTimeout(() => {
-      listRef.current?.scrollToIndex({ index, animated: true });
+      verseListRef.current?.scrollToIndex({ index, animated: true });
     }, 300);
 
     return () => clearTimeout(t);
-  }, [highlightKey, versesQuery.data]);
+  }, [highlightKey, offlineVerses, verseLayout, versesQuery.data]);
+
+  const verses = versesQuery.data ?? offlineVerses ?? [];
+  const mushafPages = useMemo(() => {
+    const map = new Map<number, Verse[]>();
+    for (const v of verses) {
+      const p = v.page_number;
+      if (!p) continue;
+      const bucket = map.get(p);
+      if (bucket) bucket.push(v);
+      else map.set(p, [v]);
+    }
+
+    if (map.size === 0) {
+      return [{ pageNumber: null, verses }];
+    }
+
+    return Array.from(map.entries())
+      .sort((a, b) => a[0] - b[0])
+      .map(([pageNumber, pageVerses]) => ({ pageNumber, verses: pageVerses }));
+  }, [verses]);
 
   return (
     <Screen className="pt-6">
@@ -122,52 +171,71 @@ export default function SurahScreen() {
           </Pressable>
         </View>
       ) : (
-        <View className={`flex-1 ${verseLayout === "page" ? "rounded-3xl border border-border bg-surface overflow-hidden" : ""}`}>
-          <FlatList
-            ref={listRef}
-            data={versesQuery.data ?? offlineVerses ?? []}
-            keyExtractor={(item) => String(item.id)}
-            contentContainerStyle={{ paddingBottom: 24 }}
-            ItemSeparatorComponent={() =>
-              verseLayout === "page" ? <View className="h-px bg-border mx-5" /> : <View className="h-3" />
-            }
-            onScrollToIndexFailed={(info) => {
-              // If layout isn't measured yet, try again shortly.
-              setTimeout(() => {
-                listRef.current?.scrollToIndex({ index: info.index, animated: true });
-              }, 300);
-            }}
-            ListHeaderComponent={
-              <View className={verseLayout === "page" ? "px-5 pt-4" : ""}>
-                {verseLayout === "page" ? (
-                  <Text className="font-ui text-sm text-muted">
-                    Page view — tap a verse to bookmark, favorite, or open tafsir.
-                  </Text>
-                ) : null}
-
-                {versesQuery.data ? null : offlineVerses ? (
-                  <View className={`${verseLayout === "page" ? "mt-3" : "mb-3"} rounded-2xl border border-border bg-bg px-4 py-3`}>
+        <View className="flex-1">
+          {verseLayout === "mushaf" ? (
+            <FlatList
+              ref={pageListRef}
+              data={mushafPages}
+              keyExtractor={(item) => (item.pageNumber ? `p${item.pageNumber}` : "p-unknown")}
+              contentContainerStyle={{ paddingBottom: 24 }}
+              ItemSeparatorComponent={() => <View className="h-4" />}
+              onScrollToIndexFailed={(info) => {
+                setTimeout(() => {
+                  pageListRef.current?.scrollToIndex({ index: info.index, animated: true });
+                }, 300);
+              }}
+              ListHeaderComponent={
+                <View>
+                  <View className="mb-3 rounded-2xl border border-border bg-surface px-4 py-3">
+                    <Text className="font-uiSemibold text-sm text-text">Mushaf page view</Text>
+                    <Text className="mt-1 font-ui text-sm text-muted">
+                      Printed-page style. Tap any verse to bookmark, favorite, or open tafsir.
+                    </Text>
+                  </View>
+                  {versesQuery.data ? null : offlineVerses ? (
+                    <View className="mb-3 rounded-2xl border border-border bg-surface px-4 py-3">
+                      <Text className="font-uiSemibold text-sm text-text">Offline copy</Text>
+                      <Text className="mt-1 font-ui text-sm text-muted">
+                        Showing downloaded text. Connect to update.
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
+              }
+              renderItem={({ item }) => (
+                <MushafPage
+                  pageNumber={item.pageNumber}
+                  verses={item.verses}
+                  arabicFontSize={arabicFontSize}
+                  highlightedVerseKey={highlightedVerseKey}
+                  onPressVerse={(v) => setActionsVerse(v)}
+                />
+              )}
+            />
+          ) : (
+            <FlatList
+              ref={verseListRef}
+              data={verses}
+              keyExtractor={(item) => String(item.id)}
+              contentContainerStyle={{ paddingBottom: 24 }}
+              ItemSeparatorComponent={() => <View className="h-3" />}
+              onScrollToIndexFailed={(info) => {
+                // If layout isn't measured yet, try again shortly.
+                setTimeout(() => {
+                  verseListRef.current?.scrollToIndex({ index: info.index, animated: true });
+                }, 300);
+              }}
+              ListHeaderComponent={
+                versesQuery.data ? null : offlineVerses ? (
+                  <View className="mb-3 rounded-2xl border border-border bg-surface px-4 py-3">
                     <Text className="font-uiSemibold text-sm text-text">Offline copy</Text>
                     <Text className="mt-1 font-ui text-sm text-muted">
                       Showing downloaded text. Connect to update.
                     </Text>
                   </View>
-                ) : null}
-
-                {verseLayout === "page" ? <View className="h-2" /> : null}
-              </View>
-            }
-            renderItem={({ item }) =>
-              verseLayout === "page" ? (
-                <VersePageRow
-                  verse={item}
-                  showTranslation={showTranslation}
-                  arabicFontSize={arabicFontSize}
-                  translationFontSize={translationFontSize}
-                  selected={item.verse_key === highlightedVerseKey || item.verse_key === actionsVerse?.verse_key}
-                  onPress={() => setActionsVerse(item)}
-                />
-              ) : (
+                ) : null
+              }
+              renderItem={({ item }) => (
                 <VerseRow
                   verse={item}
                   showTranslation={showTranslation}
@@ -175,12 +243,12 @@ export default function SurahScreen() {
                   translationFontSize={translationFontSize}
                   highlighted={item.verse_key === highlightedVerseKey}
                 />
-              )
-            }
-          />
+              )}
+            />
+          )}
 
           <VerseActionsSheet
-            open={verseLayout === "page" && !!actionsVerse}
+            open={verseLayout === "mushaf" && !!actionsVerse}
             verse={actionsVerse}
             onClose={() => setActionsVerse(null)}
             showTranslation={showTranslation}

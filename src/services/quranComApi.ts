@@ -100,6 +100,7 @@ const VerseSchema = z.object({
   verse_key: z.string(),
   verse_number: z.number(),
   text_uthmani: z.string().optional(),
+  page_number: z.number().optional(),
   audio: VerseAudioSchema.optional(),
   translations: z.array(VerseTranslationSchema).optional(),
 });
@@ -175,7 +176,7 @@ export async function getVersesByChapter(
     `/verses/by_chapter/${chapterId}`,
     {
       language,
-      fields: "text_uthmani",
+      fields: "text_uthmani,page_number",
       words: false,
       translations: translationId,
       audio: recitationId,
@@ -228,7 +229,7 @@ export async function getVerseByKey(
 ): Promise<Verse> {
   const data = await quranFetch<unknown>(`/verses/by_key/${encodeURIComponent(verseKey)}`, {
     language,
-    fields: "text_uthmani",
+    fields: "text_uthmani,page_number",
     words: false,
     translations: translationId,
     audio: recitationId,

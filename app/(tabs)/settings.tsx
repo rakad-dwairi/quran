@@ -128,7 +128,7 @@ export default function SettingsScreen() {
         <View className="mt-4">
           <Text className="font-uiMedium text-sm text-text">Verse layout</Text>
           <Text className="mt-1 font-ui text-sm text-muted">
-            Choose how verses are displayed. In Page view, tap a verse for bookmark/favorite/tafsir.
+            Choose how verses are displayed. Mushaf shows a printed-page style (Arabic only). Tap a verse for actions.
           </Text>
 
           <View className="mt-3 flex-row rounded-2xl border border-border bg-bg p-1">
@@ -148,16 +148,16 @@ export default function SettingsScreen() {
             </Pressable>
             <Pressable
               className={`flex-1 rounded-xl px-3 py-2 active:opacity-80 ${
-                verseLayout === "page" ? "bg-primary" : "bg-transparent"
+                verseLayout === "mushaf" ? "bg-primary" : "bg-transparent"
               }`}
-              onPress={() => setVerseLayout("page")}
+              onPress={() => setVerseLayout("mushaf")}
             >
               <Text
                 className={`text-center font-uiSemibold ${
-                  verseLayout === "page" ? "text-primaryForeground" : "text-text"
+                  verseLayout === "mushaf" ? "text-primaryForeground" : "text-text"
                 }`}
               >
-                Page
+                Mushaf
               </Text>
             </Pressable>
           </View>
