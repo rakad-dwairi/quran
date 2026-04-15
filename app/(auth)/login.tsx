@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Stack, router } from "expo-router";
 import { useState } from "react";
-import { Alert, Pressable, Text, TextInput, View } from "react-native";
+import { Alert, Image, Pressable, Text, TextInput, View } from "react-native";
 import { Screen } from "@/components/Screen";
 import { getFirebaseAuth, isFirebaseConfigured } from "@/services/firebaseClient";
 import { colors } from "@/theme/colors";
@@ -130,7 +130,11 @@ export default function LoginScreen() {
 
       <View className="mt-8 items-center">
         <View className="h-16 w-16 items-center justify-center rounded-full bg-primaryMuted">
-          <MaterialCommunityIcons name="moon-waning-crescent" size={28} color={colors.primary} />
+          <Image
+            source={require("../../assets/logo-mark.png")}
+            style={{ width: 34, height: 34, tintColor: colors.primary }}
+            resizeMode="contain"
+          />
         </View>
         <Text className="mt-5 text-center font-uiSemibold text-3xl text-text">Welcome back</Text>
         <Text className="mt-2 text-center font-ui text-muted">Sign in to continue your spiritual journey</Text>

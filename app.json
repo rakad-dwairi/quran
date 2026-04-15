@@ -8,6 +8,15 @@
     ],
     "name": "Quran",
     "slug": "quran",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FAF8F5"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
     "userInterfaceStyle": "automatic",
     "ios": {
       "infoPlist": {
@@ -19,7 +28,11 @@
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
         "POST_NOTIFICATIONS"
-      ]
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FAF8F5"
+      }
     }
   }
 }

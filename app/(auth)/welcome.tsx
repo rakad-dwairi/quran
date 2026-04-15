@@ -1,7 +1,7 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+﻿import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Stack, router } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Pressable, Text, View } from "react-native";
+import { Animated, Image, Pressable, Text, View } from "react-native";
 import { Screen } from "@/components/Screen";
 import { colors } from "@/theme/colors";
 
@@ -70,7 +70,11 @@ export default function WelcomeScreen() {
       <View className="flex-1 justify-between px-6 pt-14">
         <View className="items-center">
           <View className="h-14 w-14 items-center justify-center rounded-full bg-white/10">
-            <MaterialCommunityIcons name="moon-waning-crescent" size={26} color="rgba(255,255,255,0.9)" />
+            <Image
+              source={require("../../assets/logo-mark.png")}
+              style={{ width: 30, height: 30, tintColor: "rgba(255,255,255,0.9)" }}
+              resizeMode="contain"
+            />
           </View>
 
           <Text
@@ -149,3 +153,4 @@ export default function WelcomeScreen() {
     </Screen>
   );
 }
+

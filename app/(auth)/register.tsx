@@ -3,6 +3,7 @@ import { Stack, router } from "expo-router";
 import { useMemo, useState } from "react";
 import {
   Alert,
+  Image,
   Modal,
   Pressable,
   ScrollView,
@@ -202,7 +203,11 @@ export default function RegisterScreen() {
 
       <View className="mt-8 items-center">
         <View className="h-16 w-16 items-center justify-center rounded-full bg-primaryMuted">
-          <MaterialCommunityIcons name="account-plus-outline" size={28} color={colors.primary} />
+          <Image
+            source={require("../../assets/logo-mark.png")}
+            style={{ width: 34, height: 34, tintColor: colors.primary }}
+            resizeMode="contain"
+          />
         </View>
         <Text className="mt-5 text-center font-uiSemibold text-3xl text-text">Create account</Text>
         <Text className="mt-2 text-center font-ui text-muted">Join to sync bookmarks and favorites.</Text>
