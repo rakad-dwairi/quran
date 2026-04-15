@@ -68,7 +68,7 @@ function RootNavigator() {
   useEffect(() => {
     if (initializing) return;
     if (shouldGoToLogin) {
-      router.replace("/login");
+      router.replace("/welcome");
     } else if (shouldGoToApp) {
       router.replace("/");
     }
