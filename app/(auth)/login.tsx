@@ -1,5 +1,5 @@
-import { Stack, router } from "expo-router";
-import { useEffect, useState } from "react";
+import { Stack } from "expo-router";
+import { useState } from "react";
 import { Alert, Pressable, Text, TextInput, View } from "react-native";
 import { Screen } from "@/components/Screen";
 import { getFirebaseAuth, isFirebaseConfigured } from "@/services/firebaseClient";
@@ -10,21 +10,13 @@ import {
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
 } from "firebase/auth";
-import { useAuth } from "@/providers/AuthProvider";
 
 export default function LoginScreen() {
-  const { user } = useAuth();
   const configured = isFirebaseConfigured();
 
   const [busy, setBusy] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  useEffect(() => {
-    if (user) {
-      router.replace("/");
-    }
-  }, [user]);
 
   async function handleSignIn() {
     if (!configured) {
@@ -44,7 +36,6 @@ export default function LoginScreen() {
     setBusy(true);
     try {
       await signInWithEmailAndPassword(getFirebaseAuth(), nextEmail, password);
-      router.replace("/");
     } catch (e) {
       Alert.alert("Sign in failed", friendlyFirebaseAuthError(e));
     } finally {
@@ -74,7 +65,6 @@ export default function LoginScreen() {
     setBusy(true);
     try {
       await createUserWithEmailAndPassword(getFirebaseAuth(), nextEmail, password);
-      router.replace("/");
     } catch (e) {
       Alert.alert("Sign up failed", friendlyFirebaseAuthError(e));
     } finally {
@@ -175,4 +165,3 @@ export default function LoginScreen() {
     </Screen>
   );
 }
-

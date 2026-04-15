@@ -171,15 +171,19 @@ export async function getVersesByChapter(
     language?: string;
   }
 ): Promise<{ verses: Verse[]; totalPages: number; page: number }> {
-  const data = await quranFetch<VersesByChapterResponse>(`/verses/by_chapter/${chapterId}`, {
-    language,
-    fields: "text_uthmani",
-    words: false,
-    translations: translationId,
-    audio: recitationId,
-    page,
-    per_page: perPage,
-  });
+  const data = await quranFetch<VersesByChapterResponse>(
+    `/verses/by_chapter/${chapterId}`,
+    {
+      language,
+      fields: "text_uthmani",
+      words: false,
+      translations: translationId,
+      audio: recitationId,
+      page,
+      per_page: perPage,
+    },
+    { timeoutMs: 30000 }
+  );
 
   const pagination = data.pagination ?? data.meta;
   if (!pagination) {
@@ -194,13 +198,24 @@ export async function getAllVersesByChapter(
   chapterId: number,
   options: { translationId: number; recitationId?: number; language?: string }
 ): Promise<Verse[]> {
-  const first = await getVersesByChapter(chapterId, { ...options, page: 1, perPage: 50 });
-  const all: Verse[] = [...first.verses];
-  for (let page = 2; page <= first.totalPages; page++) {
-    const next = await getVersesByChapter(chapterId, { ...options, page, perPage: 50 });
-    all.push(...next.verses);
+  // Chapters max out at 286 verses, so we can fetch the whole Surah in a single call.
+  // This is more reliable on mobile networks and avoids multi-request failures.
+  try {
+    const { verses } = await getVersesByChapter(chapterId, { ...options, page: 1, perPage: 300 });
+    return verses;
+  } catch (e) {
+    // If verse-audio recitation fails (or times out), fall back to fetching text+translation only.
+    if (options.recitationId !== undefined) {
+      const { verses } = await getVersesByChapter(chapterId, {
+        ...options,
+        recitationId: undefined,
+        page: 1,
+        perPage: 300,
+      });
+      return verses;
+    }
+    throw e;
   }
-  return all;
 }
 
 const VerseByKeySchema = z.object({
@@ -224,6 +239,7 @@ export async function getVerseByKey(
 
 export function getVerseAudioUrl(audioUrl: string): string {
   if (audioUrl.startsWith("http://") || audioUrl.startsWith("https://")) return audioUrl;
+  if (audioUrl.startsWith("//")) return `https:${audioUrl}`;
   return new URL(audioUrl, VERSE_AUDIO_BASE_URL).toString();
 }
 

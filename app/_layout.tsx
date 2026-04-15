@@ -3,6 +3,7 @@ import "../global.css";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
+import { View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import * as SplashScreen from "expo-splash-screen";
 import { useFonts } from "expo-font";
@@ -61,27 +62,40 @@ function RootNavigator() {
   const { user, initializing } = useAuth();
 
   const inAuthGroup = segments[0] === "(auth)";
+  const shouldGoToLogin = !user && !inAuthGroup;
+  const shouldGoToApp = !!user && inAuthGroup;
 
   useEffect(() => {
     if (initializing) return;
-    if (!user && !inAuthGroup) {
+    if (shouldGoToLogin) {
       router.replace("/login");
-    } else if (user && inAuthGroup) {
+    } else if (shouldGoToApp) {
       router.replace("/");
     }
-  }, [initializing, user, inAuthGroup, router]);
-
-  // Prevent rendering the wrong route while we redirect.
-  if (initializing) return null;
-  if (!user && !inAuthGroup) return null;
-  if (user && inAuthGroup) return null;
+  }, [initializing, shouldGoToLogin, shouldGoToApp, router]);
 
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        contentStyle: { backgroundColor: colors.bg },
-      }}
-    />
+    <View style={{ flex: 1 }}>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: colors.bg },
+        }}
+      />
+
+      {/* Keep the navigator mounted while we redirect (prevents "no navigator" warnings). */}
+      {initializing || shouldGoToLogin || shouldGoToApp ? (
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: colors.bg,
+          }}
+        />
+      ) : null}
+    </View>
   );
 }
