@@ -17,7 +17,16 @@ export function friendlyFirebaseAuthError(e: unknown) {
     case "auth/invalid-credential":
       return "Wrong email or password (or the account doesn’t exist).";
     case "auth/operation-not-allowed":
-      return "Email/Password sign-in is disabled in Firebase Console → Authentication.";
+      return "This sign-in method is disabled in Firebase Console -> Authentication.";
+    case "auth/account-exists-with-different-credential":
+      return "An account already exists with this email using another sign-in method. Sign in with that method first.";
+    case "auth/credential-already-in-use":
+      return "This social account is already linked to another user.";
+    case "auth/popup-blocked":
+      return "The browser blocked the sign-in popup. Allow popups and try again.";
+    case "auth/popup-closed-by-user":
+    case "auth/cancelled-popup-request":
+      return "Sign-in was cancelled.";
     case "auth/network-request-failed":
       return "Network error. Check your connection and try again.";
     case "auth/too-many-requests":
@@ -28,4 +37,3 @@ export function friendlyFirebaseAuthError(e: unknown) {
       return e instanceof Error ? e.message : code;
   }
 }
-

@@ -1,17 +1,17 @@
 # Quran (Expo)
 
-Cross‑platform Quran app (Android/iOS via **Expo Go**, plus web) built with **React Native + Expo Router + TypeScript**.
+Cross-platform Quran app (Android/iOS via Expo development builds, plus web) built with **React Native + Expo Router + TypeScript**.
 
-## What’s included
+## What's included
 
 - **Quran reading**: Surah list + reading view (Arabic Uthmani + translation)
-- **Audio recitation**: play **full Surah** audio or **verse‑by‑verse**, with a dedicated `Player` screen
+- **Audio recitation**: play full Surah audio or verse-by-verse, with a dedicated `Player` screen
 - **Search**: keyword search + jump to verse (e.g. `2:255`) + Surah name suggestions
 - **Bookmarks & favorites**: saved locally (persisted) + Library screen
-- **Offline downloads**: download Surah text + Surah audio, manage via Settings → Downloads
-- **Tafsir + AI**: Quran.com tafsir display + optional AI “simplified” summary (Gemini/Genkit backend)
+- **Offline downloads**: download Surah text + Surah audio, manage via Settings -> Downloads
+- **Tafsir + AI**: Quran.com tafsir display + optional AI simplified summary (Gemini/Genkit backend)
 - **Typography**: Inter (UI), Literata (translation), Noto Naskh Arabic (Arabic)
-- **Styling**: NativeWind (Tailwind‑style classes)
+- **Styling**: NativeWind (Tailwind-style classes)
 
 ## Run the app
 
@@ -20,7 +20,7 @@ npm install
 npm start
 ```
 
-Then scan the QR code with **Expo Go** (Android/iOS).
+Expo Go can run most JavaScript-only screens, but AdMob and native Google/Facebook sign-in require a development build.
 
 Useful commands:
 
@@ -37,7 +37,7 @@ Backend setup lives in `backend/README.md`.
 
 ## Configure Cloud Sync (optional)
 
-Cloud sync uses Firebase (email/password sign‑in + manual “Sync now”).
+Cloud sync uses Firebase (email/password sign-in + manual Sync now).
 
 Create a `.env` at repo root:
 
@@ -50,5 +50,28 @@ EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...  # optional
 EXPO_PUBLIC_FIREBASE_APP_ID=...               # optional
 ```
 
-Then open Settings → Cloud Sync.
+Then open Settings -> Cloud Sync.
 
+## Configure Social Sign-In (optional)
+
+Enable Google and Facebook in Firebase Console -> Authentication -> Sign-in method.
+
+Add these values to `.env`:
+
+```bash
+EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=...
+EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=...
+EXPO_PUBLIC_GOOGLE_IOS_REVERSED_CLIENT_ID=...
+
+EXPO_PUBLIC_FACEBOOK_APP_ID=...
+EXPO_PUBLIC_FACEBOOK_CLIENT_TOKEN=...
+```
+
+Then rebuild the native app:
+
+```bash
+npx expo run:android
+npx expo run:ios
+```
+
+Google and Facebook native sign-in do not run inside Expo Go because they require custom native code.

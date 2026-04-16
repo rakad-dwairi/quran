@@ -3,6 +3,7 @@ import { Stack, router } from "expo-router";
 import { useState } from "react";
 import { Alert, Image, Pressable, Text, TextInput, View } from "react-native";
 import { Screen } from "@/components/Screen";
+import { SocialAuthButtons } from "@/components/SocialAuthButtons";
 import { getFirebaseAuth, isFirebaseConfigured } from "@/services/firebaseClient";
 import { colors } from "@/theme/colors";
 import { friendlyFirebaseAuthError } from "@/utils/firebaseAuthErrors";
@@ -141,13 +142,7 @@ export default function LoginScreen() {
       </View>
 
       <View className="mt-8 rounded-3xl border border-border bg-surface px-5 py-6">
-        <Pressable
-          className="flex-row items-center justify-center rounded-2xl border border-border bg-bg px-5 py-4 active:opacity-80"
-          onPress={() => {}}
-        >
-          <MaterialCommunityIcons name="google" size={20} color="#DB4437" />
-          <Text className="ml-3 font-uiSemibold text-base text-text">Continue with Google</Text>
-        </Pressable>
+        <SocialAuthButtons busy={busy} onBusyChange={setBusy} />
 
         <View className="mt-5 flex-row items-center">
           <View className="h-px flex-1 bg-border" />

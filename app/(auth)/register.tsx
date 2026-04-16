@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 import { Screen } from "@/components/Screen";
+import { SocialAuthButtons } from "@/components/SocialAuthButtons";
 import { getFirebaseAuth, getFirestoreDb, isFirebaseConfigured } from "@/services/firebaseClient";
 import { colors } from "@/theme/colors";
 import { friendlyFirebaseAuthError } from "@/utils/firebaseAuthErrors";
@@ -214,6 +215,14 @@ export default function RegisterScreen() {
       </View>
 
       <View className="mt-8 rounded-3xl border border-border bg-surface px-5 py-6">
+        <SocialAuthButtons busy={busy} onBusyChange={setBusy} />
+
+        <View className="my-5 flex-row items-center">
+          <View className="h-px flex-1 bg-border" />
+          <Text className="mx-4 font-uiSemibold text-xs text-muted">OR</Text>
+          <View className="h-px flex-1 bg-border" />
+        </View>
+
         <View className="flex-row gap-3">
           <View className="flex-1">
             <Text className="mb-2 font-uiMedium text-sm text-text">First name</Text>
