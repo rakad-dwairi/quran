@@ -1,8 +1,11 @@
 import type { PropsWithChildren } from "react";
 import { useEffect } from "react";
+import { hasGoogleMobileAdsNativeModule } from "@/utils/googleMobileAdsRuntime";
 
 export function AdsProvider({ children }: PropsWithChildren) {
   useEffect(() => {
+    if (!hasGoogleMobileAdsNativeModule()) return;
+
     let cancelled = false;
 
     async function initializeAds() {

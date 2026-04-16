@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { View } from "react-native";
 import { getProductionBannerAdUnitId } from "@/constants/adMob";
+import { hasGoogleMobileAdsNativeModule } from "@/utils/googleMobileAdsRuntime";
 
 type GoogleMobileAdsModule = Pick<
   typeof import("react-native-google-mobile-ads"),
@@ -12,6 +13,11 @@ export function AdBanner() {
   const [unavailable, setUnavailable] = useState(false);
 
   useEffect(() => {
+    if (!hasGoogleMobileAdsNativeModule()) {
+      setUnavailable(true);
+      return;
+    }
+
     let mounted = true;
 
     import("react-native-google-mobile-ads")
@@ -30,23 +36,23 @@ export function AdBanner() {
     };
   }, []);
 
-  if (unavailable) return null;
+  if (unavailable || !adsModule) return null;
 
   const unitId = __DEV__
-    ? adsModule?.TestIds.BANNER
+    ? adsModule.TestIds?.BANNER
     : getProductionBannerAdUnitId();
-  const BannerAd = adsModule?.BannerAd;
-  const bannerSize = adsModule?.BannerAdSize.BANNER;
+  const BannerAd = adsModule.BannerAd;
+  const bannerSize = adsModule.BannerAdSize?.BANNER;
+
+  if (!BannerAd || !bannerSize || !unitId) return null;
 
   return (
     <View className="items-center justify-center border-t border-border bg-bg py-1">
-      {BannerAd && bannerSize && unitId ? (
-        <BannerAd
-          unitId={unitId}
-          size={bannerSize}
-          requestOptions={{ requestNonPersonalizedAdsOnly: true }}
-        />
-      ) : null}
+      <BannerAd
+        unitId={unitId}
+        size={bannerSize}
+        requestOptions={{ requestNonPersonalizedAdsOnly: true }}
+      />
     </View>
   );
 }
