@@ -19,7 +19,7 @@ export function AppHeader({
   const { t, isRTL } = useAppLocale();
 
   return (
-    <View className="pb-4">
+    <View className="pb-6">
       <View className={`items-center justify-between ${isRTL ? "flex-row-reverse" : "flex-row"}`}>
         <View className={`items-center ${isRTL ? "flex-row-reverse" : "flex-row"}`}>
           {showBack ? (
@@ -32,11 +32,11 @@ export function AppHeader({
             />
           ) : null}
           <View>
-            <Text className="font-uiSemibold text-2xl text-text" style={{ textAlign: isRTL ? "right" : "left" }}>
+            <Text className="font-uiSemibold text-[28px] text-text" style={{ textAlign: isRTL ? "right" : "left" }}>
               {title}
             </Text>
             {subtitle ? (
-              <Text className="mt-0.5 font-ui text-sm text-muted" style={{ textAlign: isRTL ? "right" : "left" }}>
+              <Text className="mt-1 font-ui text-sm leading-6 text-muted" style={{ textAlign: isRTL ? "right" : "left" }}>
                 {subtitle}
               </Text>
             ) : null}

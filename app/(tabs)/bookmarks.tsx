@@ -1,10 +1,11 @@
 import { router } from "expo-router";
 import { useMemo } from "react";
 import { SectionList, Text, View } from "react-native";
+import { AppHeader } from "@/components/AppHeader";
+import { EmptyState } from "@/components/EmptyState";
 import { IconButton } from "@/components/IconButton";
 import { NowPlayingButton } from "@/components/NowPlayingButton";
 import { Screen } from "@/components/Screen";
-import { AppHeader } from "@/components/AppHeader";
 import { useChaptersQuery } from "@/hooks/quranQueries";
 import { useLibraryStore, type LibraryVerse } from "@/store/libraryStore";
 import { colors } from "@/theme/colors";
@@ -23,46 +24,37 @@ export default function BookmarksScreen() {
     return map;
   }, [chaptersQuery.data]);
 
-  const bookmarks = useMemo(() => {
-    return Object.values(bookmarksMap).sort((a, b) => b.createdAt - a.createdAt);
-  }, [bookmarksMap]);
-
-  const favorites = useMemo(() => {
-    return Object.values(favoritesMap).sort((a, b) => b.createdAt - a.createdAt);
-  }, [favoritesMap]);
+  const bookmarks = useMemo(() => Object.values(bookmarksMap).sort((a, b) => b.createdAt - a.createdAt), [bookmarksMap]);
+  const favorites = useMemo(() => Object.values(favoritesMap).sort((a, b) => b.createdAt - a.createdAt), [favoritesMap]);
 
   type Section = { title: string; kind: "bookmark" | "favorite"; data: LibraryVerse[] };
   const sections = useMemo<Section[]>(() => {
     const out: Section[] = [];
     if (bookmarks.length) out.push({ title: "Bookmarks", kind: "bookmark", data: bookmarks });
-    if (favorites.length) out.push({ title: "Favorites", kind: "favorite", data: favorites });
+    if (favorites.length) out.push({ title: "Saved verses", kind: "favorite", data: favorites });
     return out;
   }, [bookmarks, favorites]);
 
   return (
     <Screen className="pt-6">
-      <AppHeader
-        title="Library"
-        subtitle="Bookmarks and favorites."
-        showBack
-        right={<NowPlayingButton />}
-      />
+      <AppHeader title="Saved content" subtitle="Bookmarks, saved verses, and quick return points." showBack right={<NowPlayingButton />} />
 
       {sections.length === 0 ? (
-        <View className="mt-4 rounded-2xl border border-border bg-surface px-4 py-6">
-          <Text className="font-uiSemibold text-base text-text">Nothing saved yet</Text>
-          <Text className="mt-2 font-ui text-muted">
-            Open a Surah and use the bookmark or heart icons on any verse.
-          </Text>
-        </View>
+        <EmptyState
+          icon="bookmark-multiple-outline"
+          title="No saved content yet"
+          body="Open a Surah and use the bookmark or heart icons on any verse. Your saved items will appear here."
+          actionLabel="Browse Quran"
+          onAction={() => router.push("/quran")}
+        />
       ) : (
         <SectionList
           className="mt-2"
           sections={sections}
           keyExtractor={(item) => item.verseKey}
           stickySectionHeadersEnabled={false}
-          ItemSeparatorComponent={() => <View className="h-2" />}
-          SectionSeparatorComponent={() => <View className="h-4" />}
+          ItemSeparatorComponent={() => <View className="h-3" />}
+          SectionSeparatorComponent={() => <View className="h-5" />}
           renderSectionHeader={({ section }) => (
             <View className="mt-2">
               <Text className="font-uiSemibold text-base text-text">{section.title}</Text>
@@ -71,18 +63,22 @@ export default function BookmarksScreen() {
           renderItem={({ item, section }) => {
             const chapterName = chaptersById.get(item.chapterId) ?? `Surah ${item.chapterId}`;
             return (
-              <View className="rounded-2xl border border-border bg-surface px-4 py-4">
+              <View className="rounded-3xl border border-border bg-surface px-5 py-5">
                 <View className="flex-row items-start justify-between">
                   <View className="flex-1 pr-4">
                     <Text className="font-uiSemibold text-sm text-text">
-                      {item.verseKey} • {chapterName}
+                      {item.verseKey} · {chapterName}
                     </Text>
                     {item.translationText ? (
-                      <Text className="mt-2 font-serif text-sm text-muted" numberOfLines={3}>
+                      <Text className="mt-2 font-serif text-sm leading-6 text-muted" numberOfLines={3}>
                         {item.translationText}
                       </Text>
                     ) : (
-                      <Text className="mt-2 font-arabic text-text" numberOfLines={2} style={{ writingDirection: "rtl", textAlign: "right" }}>
+                      <Text
+                        className="mt-2 font-arabic text-text"
+                        numberOfLines={2}
+                        style={{ writingDirection: "rtl", textAlign: "right" }}
+                      >
                         {item.arabicText}
                       </Text>
                     )}

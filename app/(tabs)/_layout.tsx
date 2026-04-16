@@ -45,18 +45,18 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="ai"
         options={{
-          title: t("tabs.ai"),
+          title: "Study",
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="robot-outline" size={size} color={color} />
+            <MaterialCommunityIcons name="text-box-search-outline" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="new"
         options={{
-          title: t("tabs.new"),
+          title: "Discover",
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="newspaper-variant-outline" size={size} color={color} />
+            <MaterialCommunityIcons name="compass-rose" size={size} color={color} />
           ),
         }}
       />

@@ -3,9 +3,13 @@ import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Image, Pressable, ScrollView, Share, Text, View } from "react-native";
 import { useShallow } from "zustand/react/shallow";
+import { ActionButton } from "@/components/ActionButton";
 import { AppHeader } from "@/components/AppHeader";
+import { EmptyState } from "@/components/EmptyState";
 import { NowPlayingButton } from "@/components/NowPlayingButton";
 import { Screen } from "@/components/Screen";
+import { SectionCard } from "@/components/SectionCard";
+import { StatusBadge } from "@/components/StatusBadge";
 import {
   useChaptersQuery,
   useRecitationsQuery,
@@ -38,9 +42,9 @@ function formatClock(date: Date) {
 }
 
 function formatStreakLabel(days: number) {
-  if (days <= 0) return "No streak yet";
-  if (days === 1) return "1 day streak";
-  return `${days} day streak`;
+  if (days <= 0) return "Begin your reading rhythm";
+  if (days === 1) return "1 day reading streak";
+  return `${days} day reading streak`;
 }
 
 function ProfileButton() {
@@ -110,9 +114,9 @@ export default function HomeScreen() {
 
   const bookmarkMap = useLibraryStore((state) => state.bookmarks);
   const favoriteMap = useLibraryStore((state) => state.favorites);
+  const toggleFavorite = useLibraryStore((state) => state.toggleFavorite);
   const bookmarks = useMemo(() => Object.values(bookmarkMap), [bookmarkMap]);
   const favorites = useMemo(() => Object.values(favoriteMap), [favoriteMap]);
-  const toggleFavorite = useLibraryStore((state) => state.toggleFavorite);
 
   const {
     chapterId: audioChapterId,
@@ -221,7 +225,9 @@ export default function HomeScreen() {
   }, [now, prayerCoords, prayerCalculationMethod, prayerMadhab]);
 
   const currentPrayerLabel = prayerSummary?.active ? getPrayerLabel(prayerSummary.active) : "Before Fajr";
-  const currentPrayerTime = prayerSummary?.active ? formatPrayerTime(prayerSummary.built.times[prayerSummary.active]) : null;
+  const currentPrayerTime = prayerSummary?.active
+    ? formatPrayerTime(prayerSummary.built.times[prayerSummary.active])
+    : null;
 
   const continueReadingLabel = useMemo(() => {
     if (!lastReadChapterId || !lastReadVerseKey) return null;
@@ -238,10 +244,13 @@ export default function HomeScreen() {
   const features = useMemo<FeatureItem[]>(
     () => [
       { key: "quran", label: "Quran", icon: "book-open-page-variant", onPress: () => router.push("/quran") },
+      { key: "prayers", label: "Prayers", icon: "clock-outline", onPress: () => router.push("/prayers") },
       { key: "duas", label: "Duas", icon: "hands-pray", onPress: () => router.push("/duas") },
       { key: "tasbih", label: "Tasbih", icon: "counter", onPress: () => router.push("/tasbih") },
       { key: "qibla", label: "Qibla", icon: "compass-outline", onPress: () => router.push("/prayers") },
       { key: "bookmarks", label: "Bookmarks", icon: "bookmark-outline", onPress: () => router.push("/bookmarks") },
+      { key: "downloads", label: "Downloads", icon: "download-outline", onPress: () => router.push("/settings/downloads") },
+      { key: "plan", label: "Reading plan", icon: "calendar-check-outline", onPress: () => router.push("/quran") },
     ],
     []
   );
@@ -262,189 +271,203 @@ export default function HomeScreen() {
         }
       />
 
-      <ScrollView className="mt-4 flex-1" contentContainerStyle={{ paddingBottom: 24 }}>
-        <View className="rounded-2xl border border-border bg-surface p-4">
-          <Text className="font-ui text-sm text-muted">{prayerPlace ?? "Prayer awareness"}</Text>
-          <View className="mt-2 flex-row items-end justify-between">
-            <View className="flex-1 pr-4">
-              <Text className="font-uiSemibold text-lg text-text">{currentPrayerLabel}</Text>
-              <Text className="mt-1 font-ui text-sm text-muted">
-                {currentPrayerTime ? `Now: ${currentPrayerLabel} - ${currentPrayerTime}` : "Set prayer location to load times"}
-              </Text>
-            </View>
-            <MaterialCommunityIcons name="clock-outline" size={28} color={colors.primary} />
-          </View>
-
-          {prayerSummary ? (
-            <View className="mt-4 rounded-lg bg-bg px-4 py-3">
-              <Text className="font-uiMedium text-sm text-text">
-                Next: {getPrayerLabel(prayerSummary.next.id)} in{" "}
-                {formatPrayerCountdown(prayerSummary.next.at.getTime() - now.getTime())}
-              </Text>
-              <Text className="mt-1 font-ui text-sm text-muted">{formatPrayerTime(prayerSummary.next.at)}</Text>
-            </View>
-          ) : (
-            <Pressable
-              className="mt-4 rounded-lg bg-primary px-4 py-3 active:opacity-80"
-              onPress={() => router.push("/settings/notifications")}
-            >
-              <Text className="font-uiSemibold text-sm text-primaryForeground">Open Prayer Alerts</Text>
-            </Pressable>
-          )}
-        </View>
-
-        <View className="mt-4 rounded-2xl border border-border bg-surface p-4">
-          <Text className="font-uiSemibold text-base text-text">Continue reading</Text>
-          {continueReadingLabel && lastReadChapterId && lastReadVerseKey ? (
-            <>
-              <Text className="mt-2 font-ui text-sm text-muted">
-                {continueReadingLabel.chapterName} · Ayah {continueReadingLabel.verseNumber}
-              </Text>
-              <Pressable
-                className="mt-4 rounded-lg bg-primary px-4 py-3 active:opacity-80"
-                onPress={() =>
-                  router.push({
-                    pathname: `/surah/${lastReadChapterId}`,
-                    params: { verseKey: lastReadVerseKey },
-                  })
-                }
-              >
-                <Text className="font-uiSemibold text-sm text-primaryForeground">Continue Reading</Text>
-              </Pressable>
-            </>
-          ) : (
-            <>
-              <Text className="mt-2 font-ui text-sm text-muted">Open any Surah and your place will appear here.</Text>
-              <Pressable
-                className="mt-4 rounded-lg bg-primary px-4 py-3 active:opacity-80"
-                onPress={() => router.push("/quran")}
-              >
-                <Text className="font-uiSemibold text-sm text-primaryForeground">Start Reading</Text>
-              </Pressable>
-            </>
-          )}
-        </View>
-
-        <View className="mt-4 rounded-2xl border border-border bg-surface p-4">
-          <View className="flex-row items-center justify-between">
-            <Text className="font-uiSemibold text-base text-text">Today's verse</Text>
-            <Text className="font-ui text-xs text-muted">{todayVerseKey || "Loading"}</Text>
-          </View>
-
-          {todayVerse ? (
-            <>
-              <Text
-                className="mt-4 font-arabic text-xl text-text"
-                style={{ writingDirection: "rtl", textAlign: "right" }}
-              >
-                {todayVerse.text_uthmani}
-              </Text>
-              <Text className="mt-3 font-serif text-sm text-muted">
-                {todayVerse.translations?.[0]?.textPlain ?? "Translation unavailable."}
-              </Text>
-
-              <View className="mt-4 flex-row gap-3">
-                <Pressable
-                  className={`flex-1 rounded-lg px-4 py-3 active:opacity-80 ${
-                    savedTodayVerse ? "bg-primaryMuted" : "bg-bg"
-                  }`}
-                  onPress={() => {
-                    toggleFavorite({
-                      verseKey: todayVerse.verse_key,
-                      chapterId: Number(todayVerse.verse_key.split(":")[0] ?? "0"),
-                      verseNumber: todayVerse.verse_number,
-                      arabicText: todayVerse.text_uthmani ?? "",
-                      translationText: todayVerse.translations?.[0]?.textPlain,
-                      createdAt: Date.now(),
-                    });
-                  }}
-                >
-                  <Text className="text-center font-uiSemibold text-sm text-text">
-                    {savedTodayVerse ? "Saved" : "Save verse"}
-                  </Text>
-                </Pressable>
-                <Pressable
-                  className="flex-1 rounded-lg bg-bg px-4 py-3 active:opacity-80"
-                  onPress={async () => {
-                    await Share.share({
-                      message: `${todayVerse.verse_key}\n${todayVerse.text_uthmani ?? ""}\n\n${
-                        todayVerse.translations?.[0]?.textPlain ?? ""
-                      }`,
-                    });
-                  }}
-                >
-                  <Text className="text-center font-uiSemibold text-sm text-text">Share verse</Text>
-                </Pressable>
+      <ScrollView className="mt-2 flex-1" contentContainerStyle={{ paddingBottom: 24 }}>
+        <View className="gap-4">
+          <SectionCard>
+            <Text className="font-ui text-sm text-muted">{prayerPlace ?? "Prayer snapshot"}</Text>
+            <View className="mt-3 flex-row items-start justify-between">
+              <View className="flex-1 pr-4">
+                <Text className="font-uiSemibold text-lg text-text">{currentPrayerLabel}</Text>
+                <Text className="mt-1 font-ui text-sm leading-6 text-muted">
+                  {currentPrayerTime ? `Now: ${currentPrayerLabel} · ${currentPrayerTime}` : "Set prayer location to load times"}
+                </Text>
               </View>
-            </>
-          ) : (
-            <Text className="mt-3 font-ui text-sm text-muted">
-              {todayVerseQuery.isLoading ? "Loading today's verse..." : "Could not load today's verse."}
-            </Text>
-          )}
-        </View>
+              <StatusBadge label={prayerSummary ? "Live" : "Needs setup"} tone={prayerSummary ? "success" : "default"} />
+            </View>
 
-        <View className="mt-4 flex-row gap-3">
-          <View className="flex-1 rounded-2xl border border-border bg-surface p-4">
-            <Text className="font-ui text-sm text-muted">Habit</Text>
-            <Text className="mt-2 font-uiSemibold text-lg text-text">{formatStreakLabel(readingStreak)}</Text>
+            {prayerSummary ? (
+              <View className="mt-4 rounded-2xl bg-secondary px-4 py-4">
+                <Text className="font-uiMedium text-sm text-text">
+                  Next: {getPrayerLabel(prayerSummary.next.id)} in {formatPrayerCountdown(prayerSummary.next.at.getTime() - now.getTime())}
+                </Text>
+                <Text className="mt-1 font-ui text-sm text-muted">{formatPrayerTime(prayerSummary.next.at)}</Text>
+              </View>
+            ) : (
+              <View className="mt-4">
+                <ActionButton label="Open Prayer Alerts" onPress={() => router.push("/settings/notifications")} />
+              </View>
+            )}
+          </SectionCard>
+
+          <SectionCard>
+            <Text className="font-uiSemibold text-base text-text">Continue reading</Text>
+            {continueReadingLabel && lastReadChapterId && lastReadVerseKey ? (
+              <>
+                <Text className="mt-2 font-ui text-sm leading-6 text-muted">
+                  {continueReadingLabel.chapterName} · Ayah {continueReadingLabel.verseNumber}
+                </Text>
+                <View className="mt-4">
+                  <ActionButton
+                    label="Continue Reading"
+                    onPress={() =>
+                      router.push({
+                        pathname: `/surah/${lastReadChapterId}`,
+                        params: { verseKey: lastReadVerseKey },
+                      })
+                    }
+                  />
+                </View>
+              </>
+            ) : (
+              <>
+                <Text className="mt-2 font-ui text-sm leading-6 text-muted">
+                  Open any Surah and your last reading place will appear here.
+                </Text>
+                <View className="mt-4">
+                  <ActionButton label="Start Reading" onPress={() => router.push("/quran")} />
+                </View>
+              </>
+            )}
+          </SectionCard>
+
+          <SectionCard>
+            <View className="flex-row items-center justify-between">
+              <Text className="font-uiSemibold text-base text-text">Today's verse</Text>
+              <Text className="font-ui text-xs text-muted">{todayVerseKey || "Loading"}</Text>
+            </View>
+
+            {todayVerse ? (
+              <>
+                <Text
+                  className="mt-4 font-arabic text-xl text-text"
+                  style={{ writingDirection: "rtl", textAlign: "right" }}
+                >
+                  {todayVerse.text_uthmani}
+                </Text>
+                <Text className="mt-3 font-serif text-sm leading-6 text-muted">
+                  {todayVerse.translations?.[0]?.textPlain ?? "Translation not available for the current setup."}
+                </Text>
+
+                <View className="mt-4 flex-row gap-3">
+                  <ActionButton
+                    label={savedTodayVerse ? "Saved" : "Save verse"}
+                    variant={savedTodayVerse ? "secondary" : "primary"}
+                    className="flex-1"
+                    onPress={() => {
+                      toggleFavorite({
+                        verseKey: todayVerse.verse_key,
+                        chapterId: Number(todayVerse.verse_key.split(":")[0] ?? "0"),
+                        verseNumber: todayVerse.verse_number,
+                        arabicText: todayVerse.text_uthmani ?? "",
+                        translationText: todayVerse.translations?.[0]?.textPlain,
+                        createdAt: Date.now(),
+                      });
+                    }}
+                  />
+                  <ActionButton
+                    label="Share verse"
+                    variant="secondary"
+                    className="flex-1"
+                    onPress={async () => {
+                      await Share.share({
+                        message: `${todayVerse.verse_key}\n${todayVerse.text_uthmani ?? ""}\n\n${todayVerse.translations?.[0]?.textPlain ?? ""}`,
+                      });
+                    }}
+                  />
+                </View>
+              </>
+            ) : todayVerseQuery.isLoading ? (
+              <Text className="mt-3 font-ui text-sm text-muted">Loading today's verse...</Text>
+            ) : (
+              <EmptyState
+                icon="book-outline"
+                title="Today's verse is unavailable right now"
+                body="We could not load the verse content yet. You can still continue reading or browse the Quran."
+                actionLabel="Browse Quran"
+                onAction={() => router.push("/quran")}
+              />
+            )}
+          </SectionCard>
+
+          <View className="flex-row gap-3">
+            <SectionCard className="flex-1">
+              <Text className="font-ui text-sm text-muted">Habit</Text>
+              <Text className="mt-2 font-uiSemibold text-lg text-text">{formatStreakLabel(readingStreak)}</Text>
+            </SectionCard>
+            <Pressable className="flex-1 active:opacity-80" onPress={() => router.push("/bookmarks")}>
+              <SectionCard>
+                <Text className="font-ui text-sm text-muted">Saved content</Text>
+                <Text className="mt-2 font-uiSemibold text-lg text-text">{favorites.length} saved verses</Text>
+                <Text className="mt-1 font-ui text-sm text-muted">{bookmarks.length} bookmarks</Text>
+              </SectionCard>
+            </Pressable>
           </View>
-          <Pressable
-            className="flex-1 rounded-2xl border border-border bg-surface p-4 active:opacity-80"
-            onPress={() => router.push("/bookmarks")}
-          >
-            <Text className="font-ui text-sm text-muted">Saved content</Text>
-            <Text className="mt-2 font-uiSemibold text-lg text-text">{favorites.length} saved verses</Text>
-            <Text className="mt-1 font-ui text-sm text-muted">{bookmarks.length} bookmarks</Text>
-          </Pressable>
-        </View>
 
-        <View className="mt-4">
-          <Text className="font-uiSemibold text-base text-text">Features</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-3">
-            {features.map((feature, index) => (
-              <Pressable
-                key={feature.key}
-                className={`mr-3 w-28 rounded-2xl border border-border bg-surface px-4 py-4 active:opacity-80 ${
-                  index === features.length - 1 ? "mr-0" : ""
-                }`}
-                onPress={feature.onPress}
-              >
-                <MaterialCommunityIcons name={feature.icon} size={24} color={colors.primary} />
-                <Text className="mt-3 font-uiMedium text-sm text-text">{feature.label}</Text>
-              </Pressable>
-            ))}
-          </ScrollView>
-        </View>
+          <SectionCard>
+            <View className="flex-row items-center justify-between">
+              <Text className="font-uiSemibold text-base text-text">Feature shortcuts</Text>
+              <StatusBadge label="Daily use" />
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-4">
+              {features.map((feature, index) => (
+                <Pressable
+                  key={feature.key}
+                  className={`mr-3 w-28 rounded-3xl border border-border bg-bg px-4 py-4 active:opacity-80 ${
+                    index === features.length - 1 ? "mr-0" : ""
+                  }`}
+                  onPress={feature.onPress}
+                >
+                  <MaterialCommunityIcons name={feature.icon} size={24} color={colors.primary} />
+                  <Text className="mt-3 font-uiMedium text-sm text-text">{feature.label}</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </SectionCard>
 
-        <View className="mt-4 rounded-2xl border border-border bg-surface p-4">
-          <Text className="font-uiSemibold text-base text-text">Recitation</Text>
-          {audioChapterId ? (
-            <>
-              <Text className="mt-2 font-ui text-sm text-muted">
-                {audioTitle ?? `Surah ${audioChapterId}`} · {audioMode === "verse" ? "Verse by verse" : "Full Surah"}
-              </Text>
-              <Text className="mt-1 font-ui text-sm text-muted">
-                {currentReciterName} · {isPlaying ? "Playing" : "Paused"}
-              </Text>
-              <Pressable
-                className="mt-4 rounded-lg bg-primary px-4 py-3 active:opacity-80"
-                onPress={() => router.push("/player")}
-              >
-                <Text className="font-uiSemibold text-sm text-primaryForeground">Resume</Text>
-              </Pressable>
-            </>
-          ) : (
-            <>
-              <Text className="mt-2 font-ui text-sm text-muted">Start a recitation from any Surah to resume it here.</Text>
-              <Pressable
-                className="mt-4 rounded-lg bg-primary px-4 py-3 active:opacity-80"
-                onPress={() => router.push("/quran")}
-              >
-                <Text className="font-uiSemibold text-sm text-primaryForeground">Browse Quran</Text>
-              </Pressable>
-            </>
-          )}
+          <SectionCard>
+            <View className="flex-row items-center justify-between">
+              <Text className="font-uiSemibold text-base text-text">Reading plan</Text>
+              <StatusBadge label="Coming next" tone="accent" />
+            </View>
+            <Text className="mt-2 font-ui text-sm leading-6 text-muted">
+              A guided plan for 30, 60, or 90 days will live here. For now, use Continue Reading to maintain daily continuity.
+            </Text>
+            <View className="mt-4">
+              <ActionButton label="Open Quran" variant="secondary" onPress={() => router.push("/quran")} />
+            </View>
+          </SectionCard>
+
+          <SectionCard>
+            <Text className="font-uiSemibold text-base text-text">Recitation</Text>
+            {audioChapterId ? (
+              <>
+                <Text className="mt-2 font-ui text-sm leading-6 text-muted">
+                  {audioTitle ?? `Surah ${audioChapterId}`} · {audioMode === "verse" ? "Verse by verse" : "Full Surah"}
+                </Text>
+                <Text className="mt-1 font-ui text-sm text-muted">
+                  {currentReciterName} · {isPlaying ? "Playing" : "Paused"}
+                </Text>
+                <View className="mt-4">
+                  <ActionButton label="Resume" onPress={() => router.push("/player")} />
+                </View>
+              </>
+            ) : (
+              <EmptyState
+                icon="play-circle-outline"
+                title="No recitation in progress"
+                body="Start a recitation from any Surah and you will be able to resume it here."
+                actionLabel="Browse Quran"
+                onAction={() => router.push("/quran")}
+              />
+            )}
+          </SectionCard>
+
+          <SectionCard>
+            <Text className="font-uiSemibold text-base text-text">Daily reflection</Text>
+            <Text className="mt-2 font-ui text-sm leading-6 text-muted">
+              Return with a calm heart, even if today's reading is brief. Small, steady engagement is more valuable than a rushed session.
+            </Text>
+          </SectionCard>
         </View>
       </ScrollView>
     </Screen>

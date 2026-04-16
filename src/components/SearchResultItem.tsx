@@ -3,23 +3,22 @@ import { Text, View } from "react-native";
 
 export function SearchResultItem({ result }: { result: SearchResult }) {
   return (
-    <View className="rounded-2xl border border-border bg-surface px-4 py-4">
+    <View className="rounded-3xl border border-border bg-surface px-5 py-5">
       <View className="flex-row items-center justify-between">
         <Text className="font-uiSemibold text-sm text-text">{result.verse_key}</Text>
-        <Text className="font-ui text-xs text-muted">Tap to open</Text>
+        <Text className="font-ui text-xs text-muted">Open verse</Text>
       </View>
 
       <Text
-        className="mt-3 font-arabic text-text"
+        className="mt-4 font-arabic text-text"
         style={{ writingDirection: "rtl", textAlign: "right", lineHeight: 40 }}
       >
         {result.textPlain}
       </Text>
 
       {result.translationPlain ? (
-        <Text className="mt-3 font-serif text-sm text-muted">{result.translationPlain}</Text>
+        <Text className="mt-3 font-serif text-sm leading-6 text-muted">{result.translationPlain}</Text>
       ) : null}
     </View>
   );
 }
-

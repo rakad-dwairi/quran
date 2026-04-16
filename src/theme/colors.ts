@@ -18,6 +18,11 @@ export const colors = {
 
   accent: "#CEA555",
   accentForeground: "#0F241D",
+  accentSoft: "#F3E8CC",
+  successSoft: "#E4F1EB",
+  activeSoft: "#E6F1EC",
+  nextSoft: "#F6ECD7",
+  overlay: "#0F241D14",
 
   // Destructive
   danger: "#EF4444",
