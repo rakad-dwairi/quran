@@ -33,7 +33,7 @@ export default function SearchScreen() {
 
   const searchQuery = useSearchQuery({
     query: debounced,
-    translationId,
+    translationId: translationId ?? 85,
     page: 1,
     size: 20,
     language: "en",

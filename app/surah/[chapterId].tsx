@@ -10,6 +10,7 @@ import { SurahAudioControls } from "@/components/SurahAudioControls";
 import { VerseActionsSheet } from "@/components/VerseActionsSheet";
 import { VerseRow } from "@/components/VerseRow";
 import { useChapterAudioQuery, useChapterVersesQuery, useChaptersQuery } from "@/hooks/quranQueries";
+import { useAppLocale } from "@/i18n/useAppLocale";
 import type { Verse } from "@/services/quranComApi";
 import { getOfflineSurahVerses } from "@/services/offlineContent";
 import { useSettingsStore } from "@/store/settingsStore";
@@ -23,13 +24,16 @@ export default function SurahScreen() {
   const chapterId = Number(chapterIdParam);
   const {
     translationId,
+    quranTranslationLanguage,
     recitationId,
     showTranslation,
+    showTransliteration,
     arabicFontSize,
     translationFontSize,
     verseLayout,
     recordReadingProgress,
   } = useSettingsStore();
+  const { t } = useAppLocale();
 
   const chaptersQuery = useChaptersQuery({ language: "en" });
   const chapter = useMemo(
@@ -39,15 +43,16 @@ export default function SurahScreen() {
 
   const versesQuery = useChapterVersesQuery({
     chapterId,
-    translationId,
+    translationId: showTranslation ? translationId : null,
     recitationId,
-    language: "en",
+    language: quranTranslationLanguage === "es" ? "es" : "en",
+    includeTransliteration: showTransliteration,
   });
 
   const [offlineVerses, setOfflineVerses] = useState<Verse[] | null>(null);
   useEffect(() => {
     let cancelled = false;
-    getOfflineSurahVerses({ chapterId, translationId })
+    getOfflineSurahVerses({ chapterId, translationId: translationId ?? 85 })
       .then((v) => {
         if (!cancelled) setOfflineVerses(v);
       })
@@ -96,21 +101,21 @@ export default function SurahScreen() {
       })();
       if (pageIndex < 0) return;
 
-      const t = setTimeout(() => {
+      const timer = setTimeout(() => {
         pageListRef.current?.scrollToIndex({ index: pageIndex, animated: true });
       }, 300);
 
-      return () => clearTimeout(t);
+      return () => clearTimeout(timer);
     }
 
     const index = verses.findIndex((v) => v.verse_key === highlightKey);
     if (index < 0) return;
 
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       verseListRef.current?.scrollToIndex({ index, animated: true });
     }, 300);
 
-    return () => clearTimeout(t);
+    return () => clearTimeout(timer);
   }, [highlightKey, offlineVerses, verseLayout, versesQuery.data]);
 
   const verses = versesQuery.data ?? offlineVerses ?? [];
@@ -172,7 +177,7 @@ export default function SurahScreen() {
       <Stack.Screen options={{ headerShown: false }} />
 
       <AppHeader
-        title={chapter?.name_simple ? `${chapter.id}. ${chapter.name_simple}` : `Surah ${chapterId}`}
+        title={chapter?.name_simple ? `${chapter.id}. ${chapter.name_simple}` : t("surah.titleFallback", { chapterId })}
         subtitle={chapter?.name_arabic}
         showBack
         right={<NowPlayingButton />}
@@ -180,7 +185,7 @@ export default function SurahScreen() {
 
       <SurahAudioControls
         chapterId={chapterId}
-        title={chapter?.name_simple ? chapter.name_simple : `Surah ${chapterId}`}
+        title={chapter?.name_simple ? chapter.name_simple : t("surah.titleFallback", { chapterId })}
         verses={versesQuery.data ?? offlineVerses}
         chapterAudioUrl={chapterAudioQuery.data?.audio_url}
         startVerseKey={highlightKey}
@@ -191,19 +196,14 @@ export default function SurahScreen() {
       {versesQuery.isLoading ? (
         <View className="flex-1 items-center justify-center py-10">
           <ActivityIndicator />
-          <Text className="mt-3 font-ui text-muted">Loading verses…</Text>
+          <Text className="mt-3 font-ui text-muted">{t("surah.loadingVerses")}</Text>
         </View>
       ) : versesQuery.isError && !offlineVerses ? (
         <View className="flex-1 items-center justify-center py-10">
-          <Text className="font-uiSemibold text-base text-text">Couldn’t load verses</Text>
-          <Text className="mt-2 text-center font-ui text-muted">
-            Check your connection and try again.
-          </Text>
-          <Pressable
-            className="mt-5 rounded-2xl bg-primary px-5 py-3"
-            onPress={() => versesQuery.refetch()}
-          >
-            <Text className="font-uiSemibold text-primaryForeground">Retry</Text>
+          <Text className="font-uiSemibold text-base text-text">{t("surah.loadErrorTitle")}</Text>
+          <Text className="mt-2 text-center font-ui text-muted">{t("surah.loadErrorBody")}</Text>
+          <Pressable className="mt-5 rounded-2xl bg-primary px-5 py-3" onPress={() => versesQuery.refetch()}>
+            <Text className="font-uiSemibold text-primaryForeground">{t("common.retry")}</Text>
           </Pressable>
         </View>
       ) : (
@@ -225,17 +225,13 @@ export default function SurahScreen() {
               ListHeaderComponent={
                 <View>
                   <View className="mb-3 rounded-2xl border border-border bg-surface px-4 py-3">
-                    <Text className="font-uiSemibold text-sm text-text">Mushaf page view</Text>
-                    <Text className="mt-1 font-ui text-sm text-muted">
-                      Printed-page style. Tap any verse to bookmark, favorite, or open tafsir.
-                    </Text>
+                    <Text className="font-uiSemibold text-sm text-text">{t("surah.mushafView")}</Text>
+                    <Text className="mt-1 font-ui text-sm text-muted">{t("surah.mushafViewBody")}</Text>
                   </View>
                   {versesQuery.data ? null : offlineVerses ? (
                     <View className="mb-3 rounded-2xl border border-border bg-surface px-4 py-3">
-                      <Text className="font-uiSemibold text-sm text-text">Offline copy</Text>
-                      <Text className="mt-1 font-ui text-sm text-muted">
-                        Showing downloaded text. Connect to update.
-                      </Text>
+                      <Text className="font-uiSemibold text-sm text-text">{t("surah.offlineCopy")}</Text>
+                      <Text className="mt-1 font-ui text-sm text-muted">{t("surah.offlineCopyBody")}</Text>
                     </View>
                   ) : null}
                 </View>
@@ -260,7 +256,6 @@ export default function SurahScreen() {
               viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
               ItemSeparatorComponent={() => <View className="h-3" />}
               onScrollToIndexFailed={(info) => {
-                // If layout isn't measured yet, try again shortly.
                 setTimeout(() => {
                   verseListRef.current?.scrollToIndex({ index: info.index, animated: true });
                 }, 300);
@@ -268,10 +263,8 @@ export default function SurahScreen() {
               ListHeaderComponent={
                 versesQuery.data ? null : offlineVerses ? (
                   <View className="mb-3 rounded-2xl border border-border bg-surface px-4 py-3">
-                    <Text className="font-uiSemibold text-sm text-text">Offline copy</Text>
-                    <Text className="mt-1 font-ui text-sm text-muted">
-                      Showing downloaded text. Connect to update.
-                    </Text>
+                    <Text className="font-uiSemibold text-sm text-text">{t("surah.offlineCopy")}</Text>
+                    <Text className="mt-1 font-ui text-sm text-muted">{t("surah.offlineCopyBody")}</Text>
                   </View>
                 ) : null
               }
@@ -279,6 +272,7 @@ export default function SurahScreen() {
                 <VerseRow
                   verse={item}
                   showTranslation={showTranslation}
+                  showTransliteration={showTransliteration}
                   arabicFontSize={arabicFontSize}
                   translationFontSize={translationFontSize}
                   highlighted={item.verse_key === highlightedVerseKey}
@@ -292,6 +286,7 @@ export default function SurahScreen() {
             verse={actionsVerse}
             onClose={() => setActionsVerse(null)}
             showTranslation={showTranslation}
+            showTransliteration={showTransliteration}
             arabicFontSize={arabicFontSize}
             translationFontSize={translationFontSize}
           />

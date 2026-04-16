@@ -1,6 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
+import { tForLanguage } from "@/i18n";
+import { type AppLanguage } from "@/i18n/config";
 import { pickVerseKeyForDate } from "@/services/dailyVerse";
 import { getChapters, getVerseByKey, type Chapter } from "@/services/quranComApi";
 
@@ -22,7 +24,7 @@ function makeScheduleDate(date: Date, hour: number, minute: number) {
 function clampText(input: string, maxLen: number) {
   const trimmed = input.replace(/\s+/g, " ").trim();
   if (trimmed.length <= maxLen) return trimmed;
-  return `${trimmed.slice(0, maxLen - 1)}…`;
+  return `${trimmed.slice(0, maxLen - 1)}...`;
 }
 
 async function getStoredIds(): Promise<string[]> {
@@ -57,10 +59,15 @@ export async function cancelDailyVerseNotifications() {
   await setStoredIds([]);
 }
 
-async function buildDailyVerseContent(date: Date, translationId: number, chapters: Chapter[]) {
+async function buildDailyVerseContent(
+  date: Date,
+  translationId: number | null,
+  chapters: Chapter[],
+  appLanguage: AppLanguage
+) {
   const { verseKey, chapterId, chapterName } = pickVerseKeyForDate(date, chapters);
 
-  let body = `Tap to open ${verseKey}.`;
+  let body = tForLanguage(appLanguage, "notifications.dailyVerseFallbackBody", { verseKey });
   try {
     const verse = await getVerseByKey(verseKey, { translationId, language: "en" });
     const translation = verse.translations?.[0]?.textPlain ?? "";
@@ -73,8 +80,8 @@ async function buildDailyVerseContent(date: Date, translationId: number, chapter
 
   const data: DailyVerseData = { type: "dailyVerse", verseKey, chapterId };
   return {
-    title: "Daily Verse",
-    subtitle: `${verseKey} • ${chapterName}`,
+    title: tForLanguage(appLanguage, "notifications.dailyVerseTitle"),
+    subtitle: tForLanguage(appLanguage, "notifications.dailyVerseSubtitle", { verseKey, chapterName }),
     body,
     data,
   } satisfies Notifications.NotificationContentInput;
@@ -84,11 +91,13 @@ export async function scheduleDailyVerseNotifications({
   hour,
   minute,
   translationId,
+  appLanguage,
   daysAhead = 14,
 }: {
   hour: number;
   minute: number;
-  translationId: number;
+  translationId: number | null;
+  appLanguage: AppLanguage;
   daysAhead?: number;
 }) {
   await ensureDailyVerseChannel();
@@ -104,7 +113,7 @@ export async function scheduleDailyVerseNotifications({
     const scheduled = makeScheduleDate(date, hour, minute);
     if (scheduled.getTime() <= now.getTime() + 30_000) continue;
 
-    const content = await buildDailyVerseContent(scheduled, translationId, chapters);
+    const content = await buildDailyVerseContent(scheduled, translationId, chapters, appLanguage);
     const id = await Notifications.scheduleNotificationAsync({
       content,
       trigger: {
@@ -120,15 +129,21 @@ export async function scheduleDailyVerseNotifications({
   return { scheduledCount: ids.length };
 }
 
-export async function sendTestDailyVerseNotification({ translationId }: { translationId: number }) {
+export async function sendTestDailyVerseNotification({
+  translationId,
+  appLanguage,
+}: {
+  translationId: number | null;
+  appLanguage: AppLanguage;
+}) {
   await ensureDailyVerseChannel();
   const chapters = await getChapters("en");
-  const content = await buildDailyVerseContent(new Date(), translationId, chapters);
+  const content = await buildDailyVerseContent(new Date(), translationId, chapters, appLanguage);
 
   await Notifications.scheduleNotificationAsync({
     content: {
       ...content,
-      title: "Daily Verse (Test)",
+      title: tForLanguage(appLanguage, "notifications.dailyVerseTestTitle"),
     },
     trigger: null,
   });

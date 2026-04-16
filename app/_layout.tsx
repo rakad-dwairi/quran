@@ -1,4 +1,5 @@
 import "../global.css";
+import "@/i18n";
 
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -20,6 +21,7 @@ import {
 } from "@expo-google-fonts/noto-naskh-arabic";
 import { AppProviders } from "@/providers/AppProviders";
 import { AuthProvider, useAuth } from "@/providers/AuthProvider";
+import { useSettingsStore } from "@/store/settingsStore";
 import { colors } from "@/theme/colors";
 
 if (Platform.OS !== "web") {
@@ -76,20 +78,38 @@ function RootNavigator() {
   const router = useRouter();
   const segments = useSegments();
   const { user, initializing } = useAuth();
+  const localizationSetupComplete = useSettingsStore((state) => state.localizationSetupComplete);
   const handledNotificationIds = useRef(new Set<string>());
 
   const inAuthGroup = segments[0] === "(auth)";
+  const inLocalizationSetup = segments[0] === "localization-setup";
   const shouldGoToLogin = !user && !inAuthGroup;
   const shouldGoToApp = !!user && inAuthGroup;
 
   useEffect(() => {
     if (initializing) return;
+    if (!localizationSetupComplete && !inLocalizationSetup) {
+      router.replace("/localization-setup");
+      return;
+    }
+    if (localizationSetupComplete && inLocalizationSetup) {
+      router.replace(user ? "/" : "/welcome");
+      return;
+    }
     if (shouldGoToLogin) {
       router.replace("/welcome");
     } else if (shouldGoToApp) {
       router.replace("/");
     }
-  }, [initializing, shouldGoToLogin, shouldGoToApp, router]);
+  }, [
+    inLocalizationSetup,
+    initializing,
+    localizationSetupComplete,
+    router,
+    shouldGoToApp,
+    shouldGoToLogin,
+    user,
+  ]);
 
   useEffect(() => {
     let cancelled = false;
@@ -143,7 +163,7 @@ function RootNavigator() {
       />
 
       {/* Keep the navigator mounted while we redirect (prevents "no navigator" warnings). */}
-      {initializing || shouldGoToLogin || shouldGoToApp ? (
+      {initializing || !localizationSetupComplete || shouldGoToLogin || shouldGoToApp ? (
         <View
           style={{
             position: "absolute",

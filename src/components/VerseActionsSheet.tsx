@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import { Modal, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { IconButton } from "@/components/IconButton";
+import { useAppLocale } from "@/i18n/useAppLocale";
 import type { Verse } from "@/services/quranComApi";
 import { useLibraryStore } from "@/store/libraryStore";
 import { colors } from "@/theme/colors";
@@ -12,6 +13,7 @@ export function VerseActionsSheet({
   verse,
   onClose,
   showTranslation,
+  showTransliteration,
   arabicFontSize,
   translationFontSize,
 }: {
@@ -19,16 +21,18 @@ export function VerseActionsSheet({
   verse: Verse | null;
   onClose: () => void;
   showTranslation: boolean;
+  showTransliteration: boolean;
   arabicFontSize: number;
   translationFontSize: number;
 }) {
   const insets = useSafeAreaInsets();
+  const { t, isRTL } = useAppLocale();
 
   const verseKey = verse?.verse_key ?? "";
   const translation = verse?.translations?.[0]?.textPlain;
+  const transliteration = verse?.transliterationText;
   const chapterId = verseKey ? Number(verseKey.split(":")[0]) : 0;
 
-  // Hooks must be called unconditionally on every render. Avoid early-returns before hooks.
   const bookmarked = useLibraryStore((s) => (verseKey ? !!s.bookmarks[verseKey] : false));
   const favorited = useLibraryStore((s) => (verseKey ? !!s.favorites[verseKey] : false));
   const toggleBookmark = useLibraryStore((s) => s.toggleBookmark);
@@ -51,11 +55,11 @@ export function VerseActionsSheet({
           <View className="mt-4 flex-row items-start justify-between">
             <View className="flex-1 pr-4">
               <Text className="font-uiSemibold text-base text-text">{verseKey}</Text>
-              <Text className="mt-1 font-ui text-sm text-muted">Choose an action for this verse.</Text>
+              <Text className="mt-1 font-ui text-sm text-muted">{t("surah.chooseVerseAction")}</Text>
             </View>
             <IconButton
               name="close"
-              accessibilityLabel="Close"
+              accessibilityLabel={t("common.close")}
               onPress={onClose}
               color={colors.text}
               className="bg-surface"
@@ -75,12 +79,26 @@ export function VerseActionsSheet({
               {verse.text_uthmani ?? ""}
             </Text>
 
+            {showTransliteration && transliteration ? (
+              <Text
+                className="mt-3 font-ui text-muted"
+                style={{
+                  fontSize: Math.min(15, translationFontSize),
+                  lineHeight: Math.round(Math.min(15, translationFontSize) * 1.5),
+                  textAlign: isRTL ? "right" : "left",
+                }}
+              >
+                {transliteration}
+              </Text>
+            ) : null}
+
             {showTranslation && translation ? (
               <Text
                 className="mt-3 font-serif text-muted"
                 style={{
                   fontSize: Math.min(16, translationFontSize),
                   lineHeight: Math.round(Math.min(16, translationFontSize) * 1.6),
+                  textAlign: isRTL ? "right" : "left",
                 }}
               >
                 {translation}
@@ -100,7 +118,7 @@ export function VerseActionsSheet({
               }}
             >
               <MaterialCommunityIcons name="book-open-page-variant" size={18} color={colors.primary} />
-              <Text className="ml-2 font-uiSemibold text-sm text-text">Tafsir</Text>
+              <Text className="ml-2 font-uiSemibold text-sm text-text">{t("surah.tafsir")}</Text>
             </Pressable>
 
             <Pressable
@@ -123,7 +141,7 @@ export function VerseActionsSheet({
                 size={18}
                 color={bookmarked ? colors.primary : colors.muted}
               />
-              <Text className="ml-2 font-uiSemibold text-sm text-text">Bookmark</Text>
+              <Text className="ml-2 font-uiSemibold text-sm text-text">{t("surah.bookmark")}</Text>
             </Pressable>
 
             <Pressable
@@ -146,7 +164,7 @@ export function VerseActionsSheet({
                 size={18}
                 color={favorited ? colors.danger : colors.muted}
               />
-              <Text className="ml-2 font-uiSemibold text-sm text-text">Favorite</Text>
+              <Text className="ml-2 font-uiSemibold text-sm text-text">{t("surah.favorite")}</Text>
             </Pressable>
           </View>
         </Pressable>

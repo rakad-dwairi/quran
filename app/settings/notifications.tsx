@@ -95,6 +95,7 @@ function SettingsRow({
 export default function NotificationsSettingsScreen() {
   const {
     translationId,
+    appLanguage,
     dailyVerseEnabled,
     dailyVerseHour,
     dailyVerseMinute,
@@ -144,6 +145,7 @@ export default function NotificationsSettingsScreen() {
     overrides: Partial<PrayerNotificationSettings> = {}
   ): PrayerNotificationSettings {
     return {
+      appLanguage,
       notificationsEnabled: prayerNotificationsEnabled,
       adhanEnabled: prayerAdhanEnabled,
       adhanSound: prayerAdhanSound,
@@ -158,7 +160,13 @@ export default function NotificationsSettingsScreen() {
   async function applyDailyVerseSchedule({ hour, minute }: { hour: number; minute: number }) {
     setBusy(true);
     try {
-      const res = await scheduleDailyVerseNotifications({ hour, minute, translationId, daysAhead: 14 });
+      const res = await scheduleDailyVerseNotifications({
+        hour,
+        minute,
+        translationId,
+        appLanguage,
+        daysAhead: 14,
+      });
       Alert.alert("Scheduled", `Daily verse notifications are set. (${res.scheduledCount} upcoming)`);
     } catch (e) {
       Alert.alert("Scheduling failed", e instanceof Error ? e.message : "Please try again.");
@@ -314,7 +322,7 @@ export default function NotificationsSettingsScreen() {
                     Alert.alert("Permission needed", "Enable notifications to send a test.");
                     return;
                   }
-                  await sendTestDailyVerseNotification({ translationId });
+                  await sendTestDailyVerseNotification({ translationId, appLanguage });
                 } catch (e) {
                   Alert.alert("Test failed", e instanceof Error ? e.message : "Please try again.");
                 } finally {
@@ -616,6 +624,7 @@ export default function NotificationsSettingsScreen() {
                     return;
                   }
                   await sendTestPrayerNotification({
+                    appLanguage,
                     adhanEnabled: prayerAdhanEnabled,
                     adhanSound: prayerAdhanSound,
                   });

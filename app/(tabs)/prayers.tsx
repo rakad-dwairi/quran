@@ -49,6 +49,7 @@ export default function PrayersScreen() {
     prayerManualLongitude,
     prayerReminderMinutes,
     prayerPerPrayerNotifications,
+    appLanguage,
     setPrayerNotificationForPrayer,
   } = useSettingsStore();
 
@@ -67,6 +68,7 @@ export default function PrayersScreen() {
   const notificationSettings = useMemo(
     () => ({
       notificationsEnabled: prayerNotificationsEnabled,
+      appLanguage,
       adhanEnabled: prayerAdhanEnabled,
       adhanSound: prayerAdhanSound,
       calculationMethod: prayerCalculationMethod,
@@ -76,6 +78,7 @@ export default function PrayersScreen() {
     }),
     [
       prayerNotificationsEnabled,
+      appLanguage,
       prayerAdhanEnabled,
       prayerAdhanSound,
       prayerCalculationMethod,

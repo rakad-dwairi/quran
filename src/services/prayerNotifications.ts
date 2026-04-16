@@ -9,6 +9,8 @@ import {
   type PrayerMadhab,
   type PrayerReminderMinutes,
 } from "@/constants/prayer";
+import { tForLanguage } from "@/i18n";
+import { type AppLanguage } from "@/i18n/config";
 import { buildPrayerTimes, getPrayerLabel, type PrayerCoordinates } from "@/services/prayerTimes";
 
 const STORAGE_KEY = "prayer-notification-ids-v1";
@@ -18,6 +20,7 @@ const SCHEDULE_BUFFER_MS = 30_000;
 const DEFAULT_DAYS_AHEAD = 6;
 
 export type PrayerNotificationSettings = {
+  appLanguage: AppLanguage;
   notificationsEnabled: boolean;
   adhanEnabled: boolean;
   adhanSound: PrayerAdhanSound;
@@ -124,7 +127,8 @@ export async function schedulePrayerNotifications({
       if (!settings.perPrayerNotifications[prayerId]) continue;
 
       const prayerAt = built.times[prayerId];
-      const label = getPrayerLabel(prayerId);
+      const label =
+        tForLanguage(settings.appLanguage, `prayerNames.${prayerId}`) || getPrayerLabel(prayerId);
       if (prayerAt.getTime() > now.getTime() + SCHEDULE_BUFFER_MS) {
         const data: PrayerNotificationData = {
           type: "prayerTime",
@@ -135,8 +139,10 @@ export async function schedulePrayerNotifications({
 
         const id = await Notifications.scheduleNotificationAsync({
           content: {
-            title: `It is now ${label}`,
-            body: place ? `Prayer time for ${place}.` : "Prayer time has arrived.",
+            title: tForLanguage(settings.appLanguage, "notifications.prayerNowTitle", { prayer: label }),
+            body: place
+              ? tForLanguage(settings.appLanguage, "notifications.prayerNowBodyWithPlace", { place })
+              : tForLanguage(settings.appLanguage, "notifications.prayerNowBodyDefault"),
             data,
             sound: soundForAdhan(settings.adhanEnabled, settings.adhanSound),
             color: "#0E4E39",
@@ -162,8 +168,13 @@ export async function schedulePrayerNotifications({
 
           const id = await Notifications.scheduleNotificationAsync({
             content: {
-              title: `${label} in ${settings.reminderMinutes} minutes`,
-              body: place ? `Upcoming prayer for ${place}.` : "Upcoming prayer reminder.",
+              title: tForLanguage(settings.appLanguage, "notifications.prayerReminderTitle", {
+                prayer: label,
+                minutes: settings.reminderMinutes,
+              }),
+              body: place
+                ? tForLanguage(settings.appLanguage, "notifications.prayerReminderBodyWithPlace", { place })
+                : tForLanguage(settings.appLanguage, "notifications.prayerReminderBodyDefault"),
               data,
               sound: false,
               color: "#0E4E39",
@@ -185,9 +196,11 @@ export async function schedulePrayerNotifications({
 }
 
 export async function sendTestPrayerNotification({
+  appLanguage,
   adhanEnabled,
   adhanSound,
 }: {
+  appLanguage: AppLanguage;
   adhanEnabled: boolean;
   adhanSound: PrayerAdhanSound;
 }) {
@@ -195,8 +208,8 @@ export async function sendTestPrayerNotification({
 
   await Notifications.scheduleNotificationAsync({
     content: {
-      title: "Prayer Alert (Test)",
-      body: "This is how prayer alerts will appear.",
+      title: tForLanguage(appLanguage, "notifications.prayerTestTitle"),
+      body: tForLanguage(appLanguage, "notifications.prayerTestBody"),
       data: {
         type: "prayerTime",
         prayerId: "asr",

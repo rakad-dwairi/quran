@@ -1,8 +1,11 @@
 import { Tabs } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { colors } from "@/theme/colors";
 
 export default function TabsLayout() {
+  const { t } = useTranslation();
+
   return (
     <Tabs
       screenOptions={{
@@ -15,7 +18,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
+          title: t("tabs.home"),
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="home-variant-outline" size={size} color={color} />
           ),
@@ -24,7 +27,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="prayers"
         options={{
-          title: "Prayers",
+          title: t("tabs.prayers"),
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="mosque" size={size} color={color} />
           ),
@@ -33,7 +36,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="quran"
         options={{
-          title: "Quran",
+          title: t("tabs.quran"),
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="book-open-page-variant" size={size} color={color} />
           ),
@@ -42,7 +45,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="ai"
         options={{
-          title: "AI",
+          title: t("tabs.ai"),
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="robot-outline" size={size} color={color} />
           ),
@@ -51,7 +54,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="new"
         options={{
-          title: "New",
+          title: t("tabs.new"),
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="newspaper-variant-outline" size={size} color={color} />
           ),

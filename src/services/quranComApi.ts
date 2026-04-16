@@ -95,6 +95,15 @@ const VerseTranslationSchema = z.object({
   text: z.string(),
 });
 
+const VerseWordSchema = z.object({
+  transliteration: z
+    .object({
+      text: z.string().nullable().optional(),
+    })
+    .nullable()
+    .optional(),
+});
+
 const VerseSchema = z.object({
   id: z.number(),
   verse_key: z.string(),
@@ -103,19 +112,28 @@ const VerseSchema = z.object({
   page_number: z.number().optional(),
   audio: VerseAudioSchema.optional(),
   translations: z.array(VerseTranslationSchema).optional(),
+  words: z.array(VerseWordSchema).optional(),
 });
 
 export type Verse = z.infer<typeof VerseSchema> & {
   translations?: Array<z.infer<typeof VerseTranslationSchema> & { textPlain: string }>;
+  transliterationText?: string;
 };
 
 function normalizeVerse(verse: z.infer<typeof VerseSchema>): Verse {
+  const transliterationText = verse.words
+    ?.map((word) => word.transliteration?.text?.trim())
+    .filter((value): value is string => !!value)
+    .join(" ")
+    .trim();
+
   return {
     ...verse,
     translations: verse.translations?.map((t) => ({
       ...t,
       textPlain: stripHtmlTags(t.text),
     })),
+    transliterationText: transliterationText || undefined,
   };
 }
 
@@ -164,12 +182,14 @@ export async function getVersesByChapter(
     page = 1,
     perPage = 50,
     language = "en",
+    includeTransliteration = false,
   }: {
-    translationId: number;
+    translationId?: number | null;
     recitationId?: number;
     page?: number;
     perPage?: number;
     language?: string;
+    includeTransliteration?: boolean;
   }
 ): Promise<{ verses: Verse[]; totalPages: number; page: number }> {
   const data = await quranFetch<VersesByChapterResponse>(
@@ -177,8 +197,9 @@ export async function getVersesByChapter(
     {
       language,
       fields: "text_uthmani,page_number",
-      words: false,
-      translations: translationId,
+      words: includeTransliteration,
+      word_fields: includeTransliteration ? "transliteration" : undefined,
+      translations: translationId ?? undefined,
       audio: recitationId,
       page,
       per_page: perPage,
@@ -197,7 +218,12 @@ export async function getVersesByChapter(
 
 export async function getAllVersesByChapter(
   chapterId: number,
-  options: { translationId: number; recitationId?: number; language?: string }
+  options: {
+    translationId?: number | null;
+    recitationId?: number;
+    language?: string;
+    includeTransliteration?: boolean;
+  }
 ): Promise<Verse[]> {
   // Chapters max out at 286 verses, so we can fetch the whole Surah in a single call.
   // This is more reliable on mobile networks and avoids multi-request failures.
@@ -225,13 +251,24 @@ const VerseByKeySchema = z.object({
 
 export async function getVerseByKey(
   verseKey: string,
-  { translationId, recitationId, language = "en" }: { translationId: number; recitationId?: number; language?: string }
+  {
+    translationId,
+    recitationId,
+    language = "en",
+    includeTransliteration = false,
+  }: {
+    translationId?: number | null;
+    recitationId?: number;
+    language?: string;
+    includeTransliteration?: boolean;
+  }
 ): Promise<Verse> {
   const data = await quranFetch<unknown>(`/verses/by_key/${encodeURIComponent(verseKey)}`, {
     language,
     fields: "text_uthmani,page_number",
-    words: false,
-    translations: translationId,
+    words: includeTransliteration,
+    word_fields: includeTransliteration ? "transliteration" : undefined,
+    translations: translationId ?? undefined,
     audio: recitationId,
   });
   const parsed = VerseByKeySchema.parse(data);

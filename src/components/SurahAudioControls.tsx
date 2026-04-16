@@ -45,6 +45,7 @@ export function SurahAudioControls({
   } = useAudioStore();
 
   const { translationId, recitationId } = useSettingsStore();
+  const effectiveTranslationId = translationId ?? 85;
 
   const isThisChapter = playingChapterId === chapterId;
   const isChapterMode = isThisChapter && mode === "chapter";
@@ -55,7 +56,7 @@ export function SurahAudioControls({
 
   useEffect(() => {
     let cancelled = false;
-    isSurahDownloaded({ chapterId, translationId, recitationId })
+    isSurahDownloaded({ chapterId, translationId: effectiveTranslationId, recitationId })
       .then((ok) => {
         if (!cancelled) setDownloaded(ok);
       })
@@ -63,7 +64,7 @@ export function SurahAudioControls({
     return () => {
       cancelled = true;
     };
-  }, [chapterId, translationId, recitationId]);
+  }, [chapterId, effectiveTranslationId, recitationId]);
 
   const progress = useMemo(() => {
     if (!durationMillis) return 0;
@@ -93,7 +94,7 @@ export function SurahAudioControls({
                     onPress: async () => {
                       setDownloading(true);
                       try {
-                        await removeDownload({ chapterId, translationId, recitationId });
+                        await removeDownload({ chapterId, translationId: effectiveTranslationId, recitationId });
                         setDownloaded(false);
                       } finally {
                         setDownloading(false);
@@ -109,7 +110,7 @@ export function SurahAudioControls({
               try {
                 await downloadSurahBundle({
                   chapterId,
-                  translationId,
+                  translationId: effectiveTranslationId,
                   recitationId,
                   verses,
                   audioUrl: chapterAudioUrl ?? undefined,

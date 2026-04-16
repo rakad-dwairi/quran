@@ -44,15 +44,18 @@ export function useChapterVersesQuery({
   translationId,
   recitationId,
   language = "en",
+  includeTransliteration = false,
 }: {
   chapterId: number;
-  translationId: number;
+  translationId?: number | null;
   recitationId?: number;
   language?: string;
+  includeTransliteration?: boolean;
 }) {
   return useQuery({
-    queryKey: ["versesByChapter", chapterId, translationId, recitationId, language],
-    queryFn: () => getAllVersesByChapter(chapterId, { translationId, recitationId, language }),
+    queryKey: ["versesByChapter", chapterId, translationId, recitationId, language, includeTransliteration],
+    queryFn: () =>
+      getAllVersesByChapter(chapterId, { translationId, recitationId, language, includeTransliteration }),
     enabled: Number.isFinite(chapterId) && chapterId > 0,
   });
 }
@@ -62,15 +65,17 @@ export function useVerseByKeyQuery({
   translationId,
   recitationId,
   language = "en",
+  includeTransliteration = false,
 }: {
   verseKey: string;
-  translationId: number;
+  translationId?: number | null;
   recitationId?: number;
   language?: string;
+  includeTransliteration?: boolean;
 }) {
   return useQuery({
-    queryKey: ["verseByKey", verseKey, translationId, recitationId, language],
-    queryFn: () => getVerseByKey(verseKey, { translationId, recitationId, language }),
+    queryKey: ["verseByKey", verseKey, translationId, recitationId, language, includeTransliteration],
+    queryFn: () => getVerseByKey(verseKey, { translationId, recitationId, language, includeTransliteration }),
     enabled: !!verseKey,
   });
 }
@@ -124,4 +129,3 @@ export function useTafsirQuery({
     enabled: Number.isFinite(tafsirId) && tafsirId > 0 && Number.isFinite(verseId) && verseId > 0,
   });
 }
-

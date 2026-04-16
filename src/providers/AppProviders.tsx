@@ -4,7 +4,10 @@ import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persi
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useEffect, type PropsWithChildren } from "react";
+import { I18nManager, View } from "react-native";
 import { AdsProvider } from "@/providers/AdsProvider";
+import i18n from "@/i18n";
+import { isRTLAppLanguage } from "@/i18n/config";
 import { resolvePrayerLocation } from "@/services/prayerLocation";
 import { schedulePrayerNotifications } from "@/services/prayerNotifications";
 import { useSettingsStore } from "@/store/settingsStore";
@@ -25,6 +28,14 @@ const persister = createAsyncStoragePersister({
 });
 
 export function AppProviders({ children }: PropsWithChildren) {
+  const appLanguage = useSettingsStore((state) => state.appLanguage);
+  const isRTL = isRTLAppLanguage(appLanguage);
+
+  useEffect(() => {
+    i18n.changeLanguage(appLanguage).catch(() => {});
+    I18nManager.allowRTL(isRTL);
+  }, [appLanguage, isRTL]);
+
   return (
     <SafeAreaProvider>
       <AdsProvider>
@@ -36,7 +47,7 @@ export function AppProviders({ children }: PropsWithChildren) {
           }}
         >
           <PrayerNotificationsBootstrap />
-          {children}
+          <View style={{ flex: 1, direction: isRTL ? "rtl" : "ltr" }}>{children}</View>
         </PersistQueryClientProvider>
       </AdsProvider>
     </SafeAreaProvider>
@@ -57,6 +68,7 @@ function PrayerNotificationsBootstrap() {
     prayerManualLongitude,
     prayerReminderMinutes,
     prayerPerPrayerNotifications,
+    appLanguage,
   } = useSettingsStore();
 
   useEffect(() => {
@@ -90,6 +102,7 @@ function PrayerNotificationsBootstrap() {
             madhab: prayerMadhab,
             reminderMinutes: prayerReminderMinutes,
             perPrayerNotifications: prayerPerPrayerNotifications,
+            appLanguage,
           },
         });
       } catch {
@@ -113,6 +126,7 @@ function PrayerNotificationsBootstrap() {
     prayerManualLongitude,
     prayerReminderMinutes,
     prayerPerPrayerNotifications,
+    appLanguage,
   ]);
 
   return null;

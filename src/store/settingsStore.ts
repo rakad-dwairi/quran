@@ -10,13 +10,32 @@ import {
   type PrayerMadhab,
   type PrayerReminderMinutes,
 } from "@/constants/prayer";
+import {
+  detectDeviceAppLanguage,
+  detectDeviceRegion,
+  getTafsirIdForLanguage,
+  getTranslationIdForLanguage,
+  type AppLanguage,
+  type CalendarPreference,
+  type QuranContentLanguage,
+  type QuranReadingMode,
+  type TafsirLanguage,
+} from "@/i18n/config";
 
 type ThemeMode = "light" | "dark" | "sepia";
 type VerseLayout = "cards" | "mushaf";
 
 type SettingsState = {
+  appLanguage: AppLanguage;
+  localizationSetupComplete: boolean;
+  quranTranslationLanguage: QuranContentLanguage;
+  tafsirLanguage: TafsirLanguage;
+  showTransliteration: boolean;
+  regionCountry: string;
+  calendarPreference: CalendarPreference;
+
   theme: ThemeMode;
-  translationId: number;
+  translationId: number | null;
   recitationId: number;
   tafsirId: number;
   showTranslation: boolean;
@@ -49,8 +68,21 @@ type SettingsState = {
 };
 
 type SettingsActions = {
+  setAppLanguage: (language: AppLanguage) => void;
+  setLocalizationSetupComplete: (complete: boolean) => void;
+  completeLocalizationSetup: (payload: {
+    appLanguage: AppLanguage;
+    readingMode: QuranReadingMode;
+    translationLanguage: QuranContentLanguage;
+  }) => void;
+  setQuranTranslationLanguage: (language: QuranContentLanguage) => void;
+  setTafsirLanguage: (language: TafsirLanguage) => void;
+  setShowTransliteration: (showTransliteration: boolean) => void;
+  setRegionCountry: (regionCountry: string) => void;
+  setCalendarPreference: (calendarPreference: CalendarPreference) => void;
+
   setTheme: (theme: ThemeMode) => void;
-  setTranslationId: (translationId: number) => void;
+  setTranslationId: (translationId: number | null) => void;
   setRecitationId: (recitationId: number) => void;
   setTafsirId: (tafsirId: number) => void;
   setShowTranslation: (showTranslation: boolean) => void;
@@ -80,13 +112,21 @@ type SettingsActions = {
 };
 
 const DEFAULTS: SettingsState = {
+  appLanguage: detectDeviceAppLanguage(),
+  localizationSetupComplete: false,
+  quranTranslationLanguage: "en",
+  tafsirLanguage: "en",
+  showTransliteration: false,
+  regionCountry: detectDeviceRegion(),
+  calendarPreference: "gregorian",
+
   theme: "light",
   // Quran.com: 85 = M.A.S. Abdel Haleem (English)
-  translationId: 85,
+  translationId: getTranslationIdForLanguage("en"),
   // Quran.com: 7 = Mishari Alafasy (Murattal) for chapter audio; also works for verse audio via verses/by_chapter.
   recitationId: 7,
   // Quran.com: 169 = Ibn Kathir (Abridged)
-  tafsirId: 169,
+  tafsirId: getTafsirIdForLanguage("en"),
   showTranslation: true,
   arabicFontSize: 28,
   translationFontSize: 16,
@@ -130,6 +170,32 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
   persist(
     (set, get) => ({
       ...DEFAULTS,
+      setAppLanguage: (appLanguage) => set({ appLanguage }),
+      setLocalizationSetupComplete: (localizationSetupComplete) => set({ localizationSetupComplete }),
+      completeLocalizationSetup: ({ appLanguage, readingMode, translationLanguage }) =>
+        set({
+          appLanguage,
+          localizationSetupComplete: true,
+          quranTranslationLanguage: translationLanguage,
+          translationId: getTranslationIdForLanguage(translationLanguage),
+          showTranslation: readingMode !== "arabicOnly",
+          showTransliteration: readingMode === "translationTransliteration",
+          tafsirLanguage: appLanguage === "ar" ? "ar" : "en",
+          tafsirId: getTafsirIdForLanguage(appLanguage === "ar" ? "ar" : "en"),
+        }),
+      setQuranTranslationLanguage: (quranTranslationLanguage) =>
+        set({
+          quranTranslationLanguage,
+          translationId: getTranslationIdForLanguage(quranTranslationLanguage),
+        }),
+      setTafsirLanguage: (tafsirLanguage) =>
+        set({
+          tafsirLanguage,
+          tafsirId: getTafsirIdForLanguage(tafsirLanguage),
+        }),
+      setShowTransliteration: (showTransliteration) => set({ showTransliteration }),
+      setRegionCountry: (regionCountry) => set({ regionCountry }),
+      setCalendarPreference: (calendarPreference) => set({ calendarPreference }),
       setTheme: (theme) => set({ theme }),
       setTranslationId: (translationId) => set({ translationId }),
       setRecitationId: (recitationId) => set({ recitationId }),
@@ -194,7 +260,7 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
     {
       name: "settings-v1",
       storage: createJSONStorage(() => AsyncStorage),
-      version: 4,
+      version: 5,
       migrate: (persisted) => {
         if (!persisted || typeof persisted !== "object") return persisted as any;
         const state = {
@@ -206,6 +272,24 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
           ...PRAYER_NOTIFICATION_DEFAULTS,
           ...((state.prayerPerPrayerNotifications as Record<string, boolean> | undefined) ?? {}),
         };
+        const quranTranslationLanguage = (state.quranTranslationLanguage as QuranContentLanguage | undefined) ?? "en";
+        state.quranTranslationLanguage = quranTranslationLanguage;
+        state.translationId =
+          state.translationId === null || typeof state.translationId === "number"
+            ? state.translationId
+            : getTranslationIdForLanguage(quranTranslationLanguage);
+        state.tafsirLanguage = ((state.tafsirLanguage as TafsirLanguage | undefined) ?? "en") as TafsirLanguage;
+        state.tafsirId =
+          typeof state.tafsirId === "number" && state.tafsirId > 0
+            ? state.tafsirId
+            : getTafsirIdForLanguage(state.tafsirLanguage);
+        state.appLanguage = ((state.appLanguage as AppLanguage | undefined) ?? detectDeviceAppLanguage()) as AppLanguage;
+        state.regionCountry =
+          typeof state.regionCountry === "string" ? state.regionCountry : detectDeviceRegion();
+        state.calendarPreference =
+          state.calendarPreference === "hijri" ? "hijri" : "gregorian";
+        state.showTransliteration = Boolean(state.showTransliteration);
+        state.localizationSetupComplete = Boolean(state.localizationSetupComplete);
         return state as any;
       },
     }

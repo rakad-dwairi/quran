@@ -9,6 +9,10 @@ function hasValue(value) {
 module.exports = ({ config }) => {
   const plugins = [...(config.plugins ?? [])];
 
+  if (!plugins.includes("expo-localization")) {
+    plugins.push("expo-localization");
+  }
+
   if (hasValue(googleIosUrlScheme)) {
     plugins.push([
       "@react-native-google-signin/google-signin",
