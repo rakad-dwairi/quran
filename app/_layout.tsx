@@ -83,8 +83,14 @@ function RootNavigator() {
 
   const inAuthGroup = segments[0] === "(auth)";
   const inLocalizationSetup = segments[0] === "localization-setup";
-  const shouldGoToLogin = !user && !inAuthGroup;
-  const shouldGoToApp = !!user && inAuthGroup;
+  const shouldGoToLogin = localizationSetupComplete && !user && !inAuthGroup && !inLocalizationSetup;
+  const shouldGoToApp = localizationSetupComplete && !!user && inAuthGroup;
+  const shouldHoldScreen =
+    initializing ||
+    (!localizationSetupComplete && !inLocalizationSetup) ||
+    (localizationSetupComplete && inLocalizationSetup) ||
+    shouldGoToLogin ||
+    shouldGoToApp;
 
   useEffect(() => {
     if (initializing) return;
@@ -163,7 +169,7 @@ function RootNavigator() {
       />
 
       {/* Keep the navigator mounted while we redirect (prevents "no navigator" warnings). */}
-      {initializing || !localizationSetupComplete || shouldGoToLogin || shouldGoToApp ? (
+      {shouldHoldScreen ? (
         <View
           style={{
             position: "absolute",
