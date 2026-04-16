@@ -28,11 +28,13 @@
     },
     "userInterfaceStyle": "automatic",
     "ios": {
+      "bundleIdentifier": "com.rakad.quran",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "We use your location to show accurate prayer times near you."
       }
     },
     "android": {
+      "package": "com.rakad.quran",
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
