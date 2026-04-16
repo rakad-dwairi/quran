@@ -240,8 +240,8 @@ export default function SettingsScreen() {
             onPress={() => router.push("/settings/notifications")}
           >
             <View className="flex-1 pr-4">
-              <Text className="font-uiMedium text-sm text-text">Daily verse</Text>
-              <Text className="mt-1 font-ui text-sm text-muted">Get a daily verse reminder.</Text>
+              <Text className="font-uiMedium text-sm text-text">Daily verse and Prayer Alerts</Text>
+              <Text className="mt-1 font-ui text-sm text-muted">Manage reminders, prayer times, and adhan sound.</Text>
             </View>
             <IconButton
               name="chevron-right"

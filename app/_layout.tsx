@@ -24,13 +24,16 @@ import { colors } from "@/theme/colors";
 
 if (Platform.OS !== "web") {
   Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: true,
-      shouldShowBanner: true,
-      shouldShowList: true,
-      shouldPlaySound: false,
-      shouldSetBadge: false,
-    }),
+    handleNotification: async (notification) => {
+      const data = notification.request.content.data as Record<string, unknown> | undefined;
+      return {
+        shouldShowAlert: true,
+        shouldShowBanner: true,
+        shouldShowList: true,
+        shouldPlaySound: data?.type === "prayerTime" && data.playSound === true,
+        shouldSetBadge: false,
+      };
+    },
   });
 }
 
@@ -100,7 +103,14 @@ function RootNavigator() {
       handledNotificationIds.current.add(id);
 
       const data = response.notification.request.content.data as Record<string, unknown> | undefined;
-      if (!data || data.type !== "dailyVerse") return;
+      if (!data) return;
+
+      if (data.type === "prayerTime") {
+        router.push("/prayers");
+        return;
+      }
+
+      if (data.type !== "dailyVerse") return;
 
       const chapterId = typeof data.chapterId === "number" ? data.chapterId : Number(data.chapterId);
       const verseKey = typeof data.verseKey === "string" ? data.verseKey : "";
