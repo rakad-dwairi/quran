@@ -1,5 +1,6 @@
 import type { PropsWithChildren } from "react";
 import { useEffect } from "react";
+import { preloadInterstitialAd } from "@/services/interstitialAds";
 import { hasGoogleMobileAdsNativeModule } from "@/utils/googleMobileAdsRuntime";
 
 export function AdsProvider({ children }: PropsWithChildren) {
@@ -21,6 +22,7 @@ export function AdsProvider({ children }: PropsWithChildren) {
 
         if (!cancelled) {
           await mobileAds().initialize();
+          void preloadInterstitialAd();
         }
       } catch (error) {
         if (__DEV__) {

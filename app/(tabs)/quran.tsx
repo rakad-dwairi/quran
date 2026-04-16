@@ -6,10 +6,16 @@ import { NowPlayingButton } from "@/components/NowPlayingButton";
 import { Screen } from "@/components/Screen";
 import { SurahListItem } from "@/components/SurahListItem";
 import { useChaptersQuery } from "@/hooks/quranQueries";
+import { showInterstitialAdIfAvailable } from "@/services/interstitialAds";
 
 export default function QuranScreen() {
   const chaptersQuery = useChaptersQuery({ language: "en" });
   const data = useMemo(() => chaptersQuery.data ?? [], [chaptersQuery.data]);
+
+  async function openChapter(chapterId: number) {
+    await showInterstitialAdIfAvailable();
+    router.push(`/surah/${chapterId}`);
+  }
 
   return (
     <Screen className="pt-6">
@@ -44,7 +50,7 @@ export default function QuranScreen() {
           contentContainerStyle={{ paddingBottom: 24 }}
           ItemSeparatorComponent={() => <View className="h-3" />}
           renderItem={({ item }) => (
-            <Pressable onPress={() => router.push(`/surah/${item.id}`)} className="active:opacity-80">
+            <Pressable onPress={() => openChapter(item.id)} className="active:opacity-80">
               <SurahListItem chapter={item} />
             </Pressable>
           )}
