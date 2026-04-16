@@ -40,6 +40,12 @@ type SettingsState = {
   prayerManualLongitude: number | null;
   prayerReminderMinutes: PrayerReminderMinutes;
   prayerPerPrayerNotifications: Record<PrayerId, boolean>;
+
+  lastReadChapterId: number | null;
+  lastReadVerseKey: string | null;
+  lastReadAt: number | null;
+  readingStreak: number;
+  readingStreakDate: string | null;
 };
 
 type SettingsActions = {
@@ -69,6 +75,8 @@ type SettingsActions = {
   }) => void;
   setPrayerReminderMinutes: (minutes: PrayerReminderMinutes) => void;
   setPrayerNotificationForPrayer: (prayerId: PrayerId, enabled: boolean) => void;
+
+  recordReadingProgress: (payload: { chapterId: number; verseKey: string; at?: Date }) => void;
 };
 
 const DEFAULTS: SettingsState = {
@@ -100,7 +108,23 @@ const DEFAULTS: SettingsState = {
   prayerManualLongitude: null,
   prayerReminderMinutes: 0,
   prayerPerPrayerNotifications: { ...PRAYER_NOTIFICATION_DEFAULTS },
+
+  lastReadChapterId: null,
+  lastReadVerseKey: null,
+  lastReadAt: null,
+  readingStreak: 0,
+  readingStreakDate: null,
 };
+
+function toDayKey(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function addDays(dayKey: string, days: number) {
+  const date = new Date(`${dayKey}T00:00:00.000Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return toDayKey(date);
+}
 
 export const useSettingsStore = create<SettingsState & SettingsActions>()(
   persist(
@@ -145,11 +169,32 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
             [prayerId]: enabled,
           },
         })),
+      recordReadingProgress: ({ chapterId, verseKey, at = new Date() }) =>
+        set((state) => {
+          const dayKey = toDayKey(at);
+          let nextStreak = state.readingStreak;
+
+          if (state.readingStreakDate !== dayKey) {
+            if (state.readingStreakDate === addDays(dayKey, -1)) {
+              nextStreak = Math.max(1, state.readingStreak + 1);
+            } else {
+              nextStreak = 1;
+            }
+          }
+
+          return {
+            lastReadChapterId: chapterId,
+            lastReadVerseKey: verseKey,
+            lastReadAt: at.getTime(),
+            readingStreak: nextStreak,
+            readingStreakDate: dayKey,
+          };
+        }),
     }),
     {
       name: "settings-v1",
       storage: createJSONStorage(() => AsyncStorage),
-      version: 3,
+      version: 4,
       migrate: (persisted) => {
         if (!persisted || typeof persisted !== "object") return persisted as any;
         const state = {

@@ -1,5 +1,6 @@
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { ViewToken } from "react-native";
 import { ActivityIndicator, FlatList, Pressable, Text, View } from "react-native";
 import { AppHeader } from "@/components/AppHeader";
 import { NowPlayingButton } from "@/components/NowPlayingButton";
@@ -27,6 +28,7 @@ export default function SurahScreen() {
     arabicFontSize,
     translationFontSize,
     verseLayout,
+    recordReadingProgress,
   } = useSettingsStore();
 
   const chaptersQuery = useChaptersQuery({ language: "en" });
@@ -112,6 +114,31 @@ export default function SurahScreen() {
   }, [highlightKey, offlineVerses, verseLayout, versesQuery.data]);
 
   const verses = versesQuery.data ?? offlineVerses ?? [];
+  const lastRecordedVerseKeyRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    lastRecordedVerseKeyRef.current = null;
+  }, [chapterId, verseLayout]);
+
+  function captureReadingProgress(nextVerseKey: string | undefined) {
+    if (!nextVerseKey) return;
+    if (lastRecordedVerseKeyRef.current === nextVerseKey) return;
+    lastRecordedVerseKeyRef.current = nextVerseKey;
+    recordReadingProgress({ chapterId, verseKey: nextVerseKey });
+  }
+
+  useEffect(() => {
+    const fallbackVerseKey = highlightKey ?? verses[0]?.verse_key;
+    captureReadingProgress(fallbackVerseKey);
+  }, [chapterId, highlightKey, verses, recordReadingProgress]);
+
+  const onVerseViewableItemsChanged = useRef(
+    ({ viewableItems }: { viewableItems: Array<ViewToken> }) => {
+      const verse = viewableItems.find((item) => item.isViewable)?.item as Verse | undefined;
+      captureReadingProgress(verse?.verse_key);
+    }
+  );
+
   const mushafPages = useMemo(() => {
     const map = new Map<number, Verse[]>();
     for (const v of verses) {
@@ -130,6 +157,15 @@ export default function SurahScreen() {
       .sort((a, b) => a[0] - b[0])
       .map(([pageNumber, pageVerses]) => ({ pageNumber, verses: pageVerses }));
   }, [verses]);
+
+  const onMushafPagesViewableItemsChanged = useRef(
+    ({ viewableItems }: { viewableItems: Array<ViewToken> }) => {
+      const item = viewableItems.find((token) => token.isViewable)?.item as
+        | { pageNumber: number | null; verses: Verse[] }
+        | undefined;
+      captureReadingProgress(item?.verses[0]?.verse_key);
+    }
+  );
 
   return (
     <Screen className="pt-6">
@@ -178,6 +214,8 @@ export default function SurahScreen() {
               data={mushafPages}
               keyExtractor={(item) => (item.pageNumber ? `p${item.pageNumber}` : "p-unknown")}
               contentContainerStyle={{ paddingBottom: 24 }}
+              onViewableItemsChanged={onMushafPagesViewableItemsChanged.current}
+              viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
               ItemSeparatorComponent={() => <View className="h-4" />}
               onScrollToIndexFailed={(info) => {
                 setTimeout(() => {
@@ -218,6 +256,8 @@ export default function SurahScreen() {
               data={verses}
               keyExtractor={(item) => String(item.id)}
               contentContainerStyle={{ paddingBottom: 24 }}
+              onViewableItemsChanged={onVerseViewableItemsChanged.current}
+              viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
               ItemSeparatorComponent={() => <View className="h-3" />}
               onScrollToIndexFailed={(info) => {
                 // If layout isn't measured yet, try again shortly.
