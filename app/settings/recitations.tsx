@@ -1,6 +1,7 @@
 import { Stack, router } from "expo-router";
 import { useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, Text, TextInput, View } from "react-native";
+import { useShallow } from "zustand/react/shallow";
 import { AppHeader } from "@/components/AppHeader";
 import { Screen } from "@/components/Screen";
 import { useRecitationsQuery } from "@/hooks/quranQueries";
@@ -8,7 +9,12 @@ import { useSettingsStore } from "@/store/settingsStore";
 import { colors } from "@/theme/colors";
 
 export default function RecitationsScreen() {
-  const { recitationId, setRecitationId } = useSettingsStore();
+  const { recitationId, setRecitationId } = useSettingsStore(
+    useShallow((state) => ({
+      recitationId: state.recitationId,
+      setRecitationId: state.setRecitationId,
+    }))
+  );
   const recitationsQuery = useRecitationsQuery({ language: "en" });
   const [filter, setFilter] = useState("");
 

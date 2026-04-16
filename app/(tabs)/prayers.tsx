@@ -3,6 +3,7 @@ import * as Location from "expo-location";
 import { router } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
+import { useShallow } from "zustand/react/shallow";
 import { AppHeader } from "@/components/AppHeader";
 import { IconButton } from "@/components/IconButton";
 import { NowPlayingButton } from "@/components/NowPlayingButton";
@@ -51,7 +52,24 @@ export default function PrayersScreen() {
     prayerPerPrayerNotifications,
     appLanguage,
     setPrayerNotificationForPrayer,
-  } = useSettingsStore();
+  } = useSettingsStore(
+    useShallow((state) => ({
+      prayerNotificationsEnabled: state.prayerNotificationsEnabled,
+      prayerAdhanEnabled: state.prayerAdhanEnabled,
+      prayerAdhanSound: state.prayerAdhanSound,
+      prayerCalculationMethod: state.prayerCalculationMethod,
+      prayerMadhab: state.prayerMadhab,
+      prayerLocationMode: state.prayerLocationMode,
+      prayerManualCity: state.prayerManualCity,
+      prayerManualCountry: state.prayerManualCountry,
+      prayerManualLatitude: state.prayerManualLatitude,
+      prayerManualLongitude: state.prayerManualLongitude,
+      prayerReminderMinutes: state.prayerReminderMinutes,
+      prayerPerPrayerNotifications: state.prayerPerPrayerNotifications,
+      appLanguage: state.appLanguage,
+      setPrayerNotificationForPrayer: state.setPrayerNotificationForPrayer,
+    }))
+  );
 
   const [busy, setBusy] = useState(false);
   const [location, setLocation] = useState<PrayerLocationResult | null>(null);

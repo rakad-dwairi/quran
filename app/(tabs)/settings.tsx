@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import { ScrollView, Switch, Text, View, Pressable } from "react-native";
+import { useShallow } from "zustand/react/shallow";
 import { AppHeader } from "@/components/AppHeader";
 import { IconButton } from "@/components/IconButton";
 import { NowPlayingButton } from "@/components/NowPlayingButton";
@@ -49,7 +50,22 @@ export default function SettingsScreen() {
     bumpArabicFontSize,
     bumpTranslationFontSize,
     setVerseLayout,
-  } = useSettingsStore();
+  } = useSettingsStore(
+    useShallow((state) => ({
+      quranTranslationLanguage: state.quranTranslationLanguage,
+      tafsirLanguage: state.tafsirLanguage,
+      showTranslation: state.showTranslation,
+      showTransliteration: state.showTransliteration,
+      arabicFontSize: state.arabicFontSize,
+      translationFontSize: state.translationFontSize,
+      verseLayout: state.verseLayout,
+      setShowTranslation: state.setShowTranslation,
+      setShowTransliteration: state.setShowTransliteration,
+      bumpArabicFontSize: state.bumpArabicFontSize,
+      bumpTranslationFontSize: state.bumpTranslationFontSize,
+      setVerseLayout: state.setVerseLayout,
+    }))
+  );
   const { t } = useAppLocale();
 
   const translationLanguageLabel =

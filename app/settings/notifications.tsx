@@ -3,6 +3,7 @@ import * as Notifications from "expo-notifications";
 import { Stack } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Modal, Pressable, ScrollView, Switch, Text, TextInput, View } from "react-native";
+import { useShallow } from "zustand/react/shallow";
 import { AppHeader } from "@/components/AppHeader";
 import { Screen } from "@/components/Screen";
 import {
@@ -121,7 +122,37 @@ export default function NotificationsSettingsScreen() {
     setPrayerLocationMode,
     setPrayerManualLocation,
     setPrayerReminderMinutes,
-  } = useSettingsStore();
+  } = useSettingsStore(
+    useShallow((state) => ({
+      translationId: state.translationId,
+      appLanguage: state.appLanguage,
+      dailyVerseEnabled: state.dailyVerseEnabled,
+      dailyVerseHour: state.dailyVerseHour,
+      dailyVerseMinute: state.dailyVerseMinute,
+      prayerNotificationsEnabled: state.prayerNotificationsEnabled,
+      prayerAdhanEnabled: state.prayerAdhanEnabled,
+      prayerAdhanSound: state.prayerAdhanSound,
+      prayerCalculationMethod: state.prayerCalculationMethod,
+      prayerMadhab: state.prayerMadhab,
+      prayerLocationMode: state.prayerLocationMode,
+      prayerManualCity: state.prayerManualCity,
+      prayerManualCountry: state.prayerManualCountry,
+      prayerManualLatitude: state.prayerManualLatitude,
+      prayerManualLongitude: state.prayerManualLongitude,
+      prayerReminderMinutes: state.prayerReminderMinutes,
+      prayerPerPrayerNotifications: state.prayerPerPrayerNotifications,
+      setDailyVerseEnabled: state.setDailyVerseEnabled,
+      setDailyVerseTime: state.setDailyVerseTime,
+      setPrayerNotificationsEnabled: state.setPrayerNotificationsEnabled,
+      setPrayerAdhanEnabled: state.setPrayerAdhanEnabled,
+      setPrayerAdhanSound: state.setPrayerAdhanSound,
+      setPrayerCalculationMethod: state.setPrayerCalculationMethod,
+      setPrayerMadhab: state.setPrayerMadhab,
+      setPrayerLocationMode: state.setPrayerLocationMode,
+      setPrayerManualLocation: state.setPrayerManualLocation,
+      setPrayerReminderMinutes: state.setPrayerReminderMinutes,
+    }))
+  );
 
   const [busy, setBusy] = useState(false);
   const [dailyPickerOpen, setDailyPickerOpen] = useState(false);

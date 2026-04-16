@@ -2,6 +2,7 @@ import { Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ViewToken } from "react-native";
 import { ActivityIndicator, FlatList, Pressable, Text, View } from "react-native";
+import { useShallow } from "zustand/react/shallow";
 import { AppHeader } from "@/components/AppHeader";
 import { NowPlayingButton } from "@/components/NowPlayingButton";
 import { MushafPage } from "@/components/MushafPage";
@@ -32,7 +33,19 @@ export default function SurahScreen() {
     translationFontSize,
     verseLayout,
     recordReadingProgress,
-  } = useSettingsStore();
+  } = useSettingsStore(
+    useShallow((state) => ({
+      translationId: state.translationId,
+      quranTranslationLanguage: state.quranTranslationLanguage,
+      recitationId: state.recitationId,
+      showTranslation: state.showTranslation,
+      showTransliteration: state.showTransliteration,
+      arabicFontSize: state.arabicFontSize,
+      translationFontSize: state.translationFontSize,
+      verseLayout: state.verseLayout,
+      recordReadingProgress: state.recordReadingProgress,
+    }))
+  );
   const { t } = useAppLocale();
 
   const chaptersQuery = useChaptersQuery({ language: "en" });

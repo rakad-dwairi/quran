@@ -1,5 +1,6 @@
 import { Stack, router } from "expo-router";
 import { FlatList, Pressable, Text, View } from "react-native";
+import { useShallow } from "zustand/react/shallow";
 import { AppHeader } from "@/components/AppHeader";
 import { Screen } from "@/components/Screen";
 import { type QuranContentLanguage } from "@/i18n/config";
@@ -13,7 +14,12 @@ const OPTIONS: Array<{ value: QuranContentLanguage; labels: Record<QuranContentL
 ];
 
 export default function TranslationsScreen() {
-  const { quranTranslationLanguage, setQuranTranslationLanguage } = useSettingsStore();
+  const { quranTranslationLanguage, setQuranTranslationLanguage } = useSettingsStore(
+    useShallow((state) => ({
+      quranTranslationLanguage: state.quranTranslationLanguage,
+      setQuranTranslationLanguage: state.setQuranTranslationLanguage,
+    }))
+  );
   const { t, appLanguage } = useAppLocale();
 
   return (

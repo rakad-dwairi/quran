@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
+import { useShallow } from "zustand/react/shallow";
 import type { Verse } from "@/services/quranComApi";
 import {
   downloadSurahBundle,
@@ -42,9 +43,33 @@ export function SurahAudioControls({
     stop,
     next,
     previous,
-  } = useAudioStore();
+  } = useAudioStore(
+    useShallow((state) => ({
+      mode: state.mode,
+      chapterId: state.chapterId,
+      title: state.title,
+      isPlaying: state.isPlaying,
+      isLoading: state.isLoading,
+      positionMillis: state.positionMillis,
+      durationMillis: state.durationMillis,
+      queue: state.queue,
+      queueIndex: state.queueIndex,
+      error: state.error,
+      playChapter: state.playChapter,
+      playVerseQueue: state.playVerseQueue,
+      togglePlayPause: state.togglePlayPause,
+      stop: state.stop,
+      next: state.next,
+      previous: state.previous,
+    }))
+  );
 
-  const { translationId, recitationId } = useSettingsStore();
+  const { translationId, recitationId } = useSettingsStore(
+    useShallow((state) => ({
+      translationId: state.translationId,
+      recitationId: state.recitationId,
+    }))
+  );
   const effectiveTranslationId = translationId ?? 85;
 
   const isThisChapter = playingChapterId === chapterId;

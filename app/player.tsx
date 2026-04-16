@@ -1,5 +1,6 @@
 import { Stack } from "expo-router";
 import { Pressable, Text, View } from "react-native";
+import { useShallow } from "zustand/react/shallow";
 import { AppHeader } from "@/components/AppHeader";
 import { Screen } from "@/components/Screen";
 import { useAudioStore } from "@/store/audioStore";
@@ -20,7 +21,23 @@ export default function PlayerScreen() {
     stop,
     next,
     previous,
-  } = useAudioStore();
+  } = useAudioStore(
+    useShallow((state) => ({
+      mode: state.mode,
+      chapterId: state.chapterId,
+      title: state.title,
+      isPlaying: state.isPlaying,
+      isLoading: state.isLoading,
+      positionMillis: state.positionMillis,
+      durationMillis: state.durationMillis,
+      queue: state.queue,
+      queueIndex: state.queueIndex,
+      togglePlayPause: state.togglePlayPause,
+      stop: state.stop,
+      next: state.next,
+      previous: state.previous,
+    }))
+  );
 
   const progress = durationMillis ? Math.max(0, Math.min(1, positionMillis / durationMillis)) : 0;
   const currentVerseKey = mode === "verse" && queue ? queue[queueIndex]?.verseKey : null;

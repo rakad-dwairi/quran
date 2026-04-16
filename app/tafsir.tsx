@@ -2,6 +2,7 @@ import { Stack, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
 import RenderHTML from "react-native-render-html";
+import { useShallow } from "zustand/react/shallow";
 import { AppHeader } from "@/components/AppHeader";
 import { Screen } from "@/components/Screen";
 import { fetchAiTafsir, isAiTafsirConfigured, type AiTafsirResponse } from "@/services/aiTafsirClient";
@@ -20,7 +21,12 @@ export default function TafsirScreen() {
   const verseKey = typeof verseKeyParam === "string" ? verseKeyParam : "";
   const { width } = useWindowDimensions();
 
-  const { tafsirId, translationId } = useSettingsStore();
+  const { tafsirId, translationId } = useSettingsStore(
+    useShallow((state) => ({
+      tafsirId: state.tafsirId,
+      translationId: state.translationId,
+    }))
+  );
 
   const verseQuery = useVerseByKeyQuery({
     verseKey,

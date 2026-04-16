@@ -1,6 +1,7 @@
 import { Stack, router } from "expo-router";
 import { useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import { useShallow } from "zustand/react/shallow";
 import { Screen } from "@/components/Screen";
 import {
   type AppLanguage,
@@ -21,7 +22,16 @@ export default function LocalizationSetupScreen() {
     completeLocalizationSetup,
     showTranslation,
     showTransliteration,
-  } = useSettingsStore();
+  } = useSettingsStore(
+    useShallow((state) => ({
+      appLanguage: state.appLanguage,
+      quranTranslationLanguage: state.quranTranslationLanguage,
+      setAppLanguage: state.setAppLanguage,
+      completeLocalizationSetup: state.completeLocalizationSetup,
+      showTranslation: state.showTranslation,
+      showTransliteration: state.showTransliteration,
+    }))
+  );
   const { t, isRTL } = useAppLocale();
   const [step, setStep] = useState(0);
 

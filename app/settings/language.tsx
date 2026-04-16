@@ -1,5 +1,6 @@
 import { Stack } from "expo-router";
 import { Pressable, Text, View } from "react-native";
+import { useShallow } from "zustand/react/shallow";
 import { AppHeader } from "@/components/AppHeader";
 import { Screen } from "@/components/Screen";
 import { type AppLanguage } from "@/i18n/config";
@@ -10,7 +11,15 @@ const APP_LANGUAGES: AppLanguage[] = ["en", "ar", "es"];
 
 export default function LanguageSettingsScreen() {
   const { appLanguage, regionCountry, calendarPreference, setAppLanguage, setCalendarPreference } =
-    useSettingsStore();
+    useSettingsStore(
+      useShallow((state) => ({
+        appLanguage: state.appLanguage,
+        regionCountry: state.regionCountry,
+        calendarPreference: state.calendarPreference,
+        setAppLanguage: state.setAppLanguage,
+        setCalendarPreference: state.setCalendarPreference,
+      }))
+    );
   const { t, isRTL } = useAppLocale();
 
   return (

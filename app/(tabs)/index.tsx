@@ -2,6 +2,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Image, Pressable, ScrollView, Share, Text, View } from "react-native";
+import { useShallow } from "zustand/react/shallow";
 import { AppHeader } from "@/components/AppHeader";
 import { NowPlayingButton } from "@/components/NowPlayingButton";
 import { Screen } from "@/components/Screen";
@@ -43,7 +44,7 @@ function formatStreakLabel(days: number) {
 }
 
 function ProfileButton() {
-  const { user } = useAuth();
+  const user = useAuth().user;
   const initial = (user?.email?.trim()?.[0] ?? "U").toUpperCase();
 
   return (
@@ -72,7 +73,7 @@ type FeatureItem = {
 };
 
 export default function HomeScreen() {
-  const { user } = useAuth();
+  const user = useAuth().user;
   const [now, setNow] = useState(() => new Date());
   const [prayerPlace, setPrayerPlace] = useState<string | null>(null);
   const [prayerCoords, setPrayerCoords] = useState<{ latitude: number; longitude: number } | null>(null);
@@ -90,10 +91,27 @@ export default function HomeScreen() {
     lastReadChapterId,
     lastReadVerseKey,
     readingStreak,
-  } = useSettingsStore();
+  } = useSettingsStore(
+    useShallow((state) => ({
+      translationId: state.translationId,
+      recitationId: state.recitationId,
+      prayerCalculationMethod: state.prayerCalculationMethod,
+      prayerMadhab: state.prayerMadhab,
+      prayerLocationMode: state.prayerLocationMode,
+      prayerManualCity: state.prayerManualCity,
+      prayerManualCountry: state.prayerManualCountry,
+      prayerManualLatitude: state.prayerManualLatitude,
+      prayerManualLongitude: state.prayerManualLongitude,
+      lastReadChapterId: state.lastReadChapterId,
+      lastReadVerseKey: state.lastReadVerseKey,
+      readingStreak: state.readingStreak,
+    }))
+  );
 
-  const bookmarks = useLibraryStore((state) => Object.values(state.bookmarks));
-  const favorites = useLibraryStore((state) => Object.values(state.favorites));
+  const bookmarkMap = useLibraryStore((state) => state.bookmarks);
+  const favoriteMap = useLibraryStore((state) => state.favorites);
+  const bookmarks = useMemo(() => Object.values(bookmarkMap), [bookmarkMap]);
+  const favorites = useMemo(() => Object.values(favoriteMap), [favoriteMap]);
   const toggleFavorite = useLibraryStore((state) => state.toggleFavorite);
 
   const {
@@ -101,7 +119,14 @@ export default function HomeScreen() {
     title: audioTitle,
     mode: audioMode,
     isPlaying,
-  } = useAudioStore();
+  } = useAudioStore(
+    useShallow((state) => ({
+      chapterId: state.chapterId,
+      title: state.title,
+      mode: state.mode,
+      isPlaying: state.isPlaying,
+    }))
+  );
 
   const chaptersQuery = useChaptersQuery({ language: "en" });
   const recitationsQuery = useRecitationsQuery({ language: "en" });

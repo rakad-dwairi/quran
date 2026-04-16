@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, Text, TextInput, View } from "react-native";
+import { useShallow } from "zustand/react/shallow";
 import { AppHeader } from "@/components/AppHeader";
 import { NowPlayingButton } from "@/components/NowPlayingButton";
 import { Screen } from "@/components/Screen";
@@ -28,7 +29,11 @@ export default function SearchScreen() {
   const debounced = useDebouncedValue(query, 350);
   const trimmed = debounced.trim();
 
-  const { translationId } = useSettingsStore();
+  const { translationId } = useSettingsStore(
+    useShallow((state) => ({
+      translationId: state.translationId,
+    }))
+  );
   const chaptersQuery = useChaptersQuery({ language: "en" });
 
   const searchQuery = useSearchQuery({

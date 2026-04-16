@@ -5,6 +5,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useEffect, type PropsWithChildren } from "react";
 import { I18nManager, View } from "react-native";
+import { useShallow } from "zustand/react/shallow";
 import { AdsProvider } from "@/providers/AdsProvider";
 import i18n from "@/i18n";
 import { isRTLAppLanguage } from "@/i18n/config";
@@ -69,7 +70,23 @@ function PrayerNotificationsBootstrap() {
     prayerReminderMinutes,
     prayerPerPrayerNotifications,
     appLanguage,
-  } = useSettingsStore();
+  } = useSettingsStore(
+    useShallow((state) => ({
+      prayerNotificationsEnabled: state.prayerNotificationsEnabled,
+      prayerAdhanEnabled: state.prayerAdhanEnabled,
+      prayerAdhanSound: state.prayerAdhanSound,
+      prayerCalculationMethod: state.prayerCalculationMethod,
+      prayerMadhab: state.prayerMadhab,
+      prayerLocationMode: state.prayerLocationMode,
+      prayerManualCity: state.prayerManualCity,
+      prayerManualCountry: state.prayerManualCountry,
+      prayerManualLatitude: state.prayerManualLatitude,
+      prayerManualLongitude: state.prayerManualLongitude,
+      prayerReminderMinutes: state.prayerReminderMinutes,
+      prayerPerPrayerNotifications: state.prayerPerPrayerNotifications,
+      appLanguage: state.appLanguage,
+    }))
+  );
 
   useEffect(() => {
     if (!prayerNotificationsEnabled) return;

@@ -1,5 +1,6 @@
 import { Stack, router } from "expo-router";
 import { FlatList, Pressable, Text, View } from "react-native";
+import { useShallow } from "zustand/react/shallow";
 import { AppHeader } from "@/components/AppHeader";
 import { Screen } from "@/components/Screen";
 import { type TafsirLanguage } from "@/i18n/config";
@@ -12,7 +13,12 @@ const OPTIONS: Array<{ value: TafsirLanguage; labels: Record<TafsirLanguage, str
 ];
 
 export default function TafsirSettingsScreen() {
-  const { tafsirLanguage, setTafsirLanguage } = useSettingsStore();
+  const { tafsirLanguage, setTafsirLanguage } = useSettingsStore(
+    useShallow((state) => ({
+      tafsirLanguage: state.tafsirLanguage,
+      setTafsirLanguage: state.setTafsirLanguage,
+    }))
+  );
   const { t, appLanguage } = useAppLocale();
   const languageKey = appLanguage === "ar" ? "ar" : "en";
 
