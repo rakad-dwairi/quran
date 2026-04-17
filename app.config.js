@@ -13,6 +13,14 @@ module.exports = ({ config }) => {
     plugins.push("expo-localization");
   }
 
+  plugins.push([
+    "expo-notifications",
+    {
+      icon: "./assets/notification-icon.png",
+      color: "#0E4E39",
+    },
+  ]);
+
   if (hasValue(googleIosUrlScheme)) {
     plugins.push([
       "@react-native-google-signin/google-signin",

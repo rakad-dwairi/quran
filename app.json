@@ -30,8 +30,10 @@
     "ios": {
       "bundleIdentifier": "com.rakad.quran",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "We use your location to show accurate prayer times near you."
-      }
+        "NSLocationWhenInUseUsageDescription": "Your location is used to calculate accurate prayer times, Qibla direction, and nearby Islamic features."
+      },
+      "supportsTablet": true,
+      "buildNumber": "1"
     },
     "android": {
       "package": "com.rakad.quran",
@@ -42,8 +44,17 @@
       ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#FAF8F5"
-      }
+        "backgroundColor": "#FAF8F5",
+        "monochromeImage": "./assets/monochrome-icon.png"
+      },
+      "versionCode": 1
+    },
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "notification": {
+      "icon": "./assets/notification-icon.png",
+      "color": "#0E4E39",
+      "iosDisplayInForeground": true
     }
   }
 }
