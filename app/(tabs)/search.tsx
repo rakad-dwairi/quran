@@ -8,6 +8,7 @@ import { Screen } from "@/components/Screen";
 import { SearchResultItem } from "@/components/SearchResultItem";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useChaptersQuery, useSearchQuery } from "@/hooks/quranQueries";
+import { useAppLocale } from "@/i18n/useAppLocale";
 import type { SearchResult } from "@/services/quranComApi";
 import { useSettingsStore } from "@/store/settingsStore";
 import { colors } from "@/theme/colors";
@@ -25,6 +26,7 @@ function parseVerseKey(input: string): string | null {
 }
 
 export default function SearchScreen() {
+  const { appLanguage, t, textAlign, isRTL } = useAppLocale();
   const [query, setQuery] = useState("");
   const debounced = useDebouncedValue(query, 350);
   const trimmed = debounced.trim();
@@ -34,14 +36,14 @@ export default function SearchScreen() {
       translationId: state.translationId,
     }))
   );
-  const chaptersQuery = useChaptersQuery({ language: "en" });
+  const chaptersQuery = useChaptersQuery({ language: appLanguage });
 
   const searchQuery = useSearchQuery({
     query: debounced,
     translationId: translationId ?? 85,
     page: 1,
     size: 20,
-    language: "en",
+    language: appLanguage,
   });
 
   const results = useMemo<SearchResult[]>(() => searchQuery.data?.results ?? [], [searchQuery.data]);
@@ -57,8 +59,8 @@ export default function SearchScreen() {
   return (
     <Screen className="pt-6">
       <AppHeader
-        title="Search"
-        subtitle="Find verses by keyword, Surah, or verse number."
+        title={t("search.title")}
+        subtitle={t("search.subtitle")}
         showBack
         right={<NowPlayingButton />}
       />
@@ -66,11 +68,12 @@ export default function SearchScreen() {
       <TextInput
         value={query}
         onChangeText={setQuery}
-        placeholder="Search (e.g., mercy) or jump (e.g., 2:255)"
+        placeholder={t("search.placeholder")}
         placeholderTextColor={colors.muted}
         autoCapitalize="none"
         autoCorrect={false}
         returnKeyType="search"
+        style={{ textAlign, writingDirection: isRTL ? "rtl" : "ltr" }}
         onSubmitEditing={() => {
           const key = parseVerseKey(query);
           if (!key) return;
@@ -82,16 +85,14 @@ export default function SearchScreen() {
 
       {trimmed.length === 0 ? (
         <View className="mt-6 rounded-2xl border border-border bg-surface px-4 py-4">
-          <Text className="font-uiSemibold text-base text-text">Tips</Text>
-          <Text className="mt-2 font-ui text-muted">
-            - Use keywords (English) like "mercy"{`\n`}- Jump to an ayah like "2:255"
-          </Text>
+          <Text className="font-uiSemibold text-base text-text" style={{ textAlign }}>{t("search.tipsTitle")}</Text>
+          <Text className="mt-2 font-ui text-muted" style={{ textAlign }}>{t("search.tipsBody")}</Text>
         </View>
       ) : (
         <>
           {surahMatches.length ? (
             <View className="mt-4 rounded-2xl border border-border bg-surface px-4 py-4">
-              <Text className="font-uiSemibold text-base text-text">Surahs</Text>
+              <Text className="font-uiSemibold text-base text-text" style={{ textAlign }}>{t("search.surahs")}</Text>
               <View className="mt-3">
                 {surahMatches.map((c) => (
                   <Pressable
@@ -112,17 +113,17 @@ export default function SearchScreen() {
           {searchQuery.isLoading ? (
             <View className="flex-1 items-center justify-center py-10">
               <ActivityIndicator />
-              <Text className="mt-3 font-ui text-muted">Searching…</Text>
+              <Text className="mt-3 font-ui text-muted" style={{ textAlign }}>{t("search.searching")}</Text>
             </View>
           ) : searchQuery.isError ? (
             <View className="mt-6 rounded-2xl border border-border bg-surface px-4 py-4">
-              <Text className="font-uiSemibold text-base text-text">Search failed</Text>
-              <Text className="mt-2 font-ui text-muted">Check your connection and try again.</Text>
+              <Text className="font-uiSemibold text-base text-text" style={{ textAlign }}>{t("search.failedTitle")}</Text>
+              <Text className="mt-2 font-ui text-muted" style={{ textAlign }}>{t("search.failedBody")}</Text>
               <Pressable
                 className="mt-4 self-start rounded-2xl bg-primary px-4 py-2"
                 onPress={() => searchQuery.refetch()}
               >
-                <Text className="font-uiSemibold text-primaryForeground">Retry</Text>
+                <Text className="font-uiSemibold text-primaryForeground">{t("common.retry")}</Text>
               </Pressable>
             </View>
           ) : (
@@ -134,9 +135,9 @@ export default function SearchScreen() {
               contentContainerStyle={{ paddingBottom: 24 }}
               ListEmptyComponent={
                 <View className="mt-6 rounded-2xl border border-border bg-surface px-4 py-4">
-                  <Text className="font-uiSemibold text-base text-text">No results</Text>
-                  <Text className="mt-2 font-ui text-muted">
-                    Try different keywords or jump using a verse number like "2:255".
+                  <Text className="font-uiSemibold text-base text-text" style={{ textAlign }}>{t("search.noResultsTitle")}</Text>
+                  <Text className="mt-2 font-ui text-muted" style={{ textAlign }}>
+                    {t("search.noResultsBody")}
                   </Text>
                 </View>
               }

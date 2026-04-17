@@ -8,6 +8,7 @@ import {
   type QuranContentLanguage,
   type QuranReadingMode,
 } from "@/i18n/config";
+import { APP_LANGUAGE_NATIVE_LABELS, QURAN_LANGUAGE_NATIVE_LABELS } from "@/i18n/languageMetadata";
 import { useAppLocale } from "@/i18n/useAppLocale";
 import { useSettingsStore } from "@/store/settingsStore";
 
@@ -32,7 +33,7 @@ export default function LocalizationSetupScreen() {
       showTransliteration: state.showTransliteration,
     }))
   );
-  const { t, isRTL } = useAppLocale();
+  const { t, textAlign, rowDirection } = useAppLocale();
   const [step, setStep] = useState(0);
 
   const currentMode = useMemo<QuranReadingMode>(() => {
@@ -50,20 +51,14 @@ export default function LocalizationSetupScreen() {
       <Stack.Screen options={{ headerShown: false }} />
 
       <View>
-        <Text
-          className="font-uiSemibold text-3xl text-text"
-          style={{ textAlign: isRTL ? "right" : "left" }}
-        >
+        <Text className="font-uiSemibold text-3xl text-text" style={{ textAlign }}>
           {t("localizationSetup.title")}
         </Text>
-        <Text
-          className="mt-3 font-ui text-base text-muted"
-          style={{ textAlign: isRTL ? "right" : "left" }}
-        >
+        <Text className="mt-3 font-ui text-base text-muted" style={{ textAlign }}>
           {t("localizationSetup.subtitle")}
         </Text>
 
-        <View className="mt-8 flex-row gap-2">
+        <View className="mt-8 gap-2" style={{ flexDirection: rowDirection }}>
           {[0, 1, 2].map((index) => (
             <View
               key={index}
@@ -74,16 +69,10 @@ export default function LocalizationSetupScreen() {
 
         {step === 0 ? (
           <View className="mt-8">
-            <Text
-              className="font-uiSemibold text-xl text-text"
-              style={{ textAlign: isRTL ? "right" : "left" }}
-            >
+            <Text className="font-uiSemibold text-xl text-text" style={{ textAlign }}>
               {t("localizationSetup.stepLanguageTitle")}
             </Text>
-            <Text
-              className="mt-2 font-ui text-sm text-muted"
-              style={{ textAlign: isRTL ? "right" : "left" }}
-            >
+            <Text className="mt-2 font-ui text-sm text-muted" style={{ textAlign }}>
               {t("localizationSetup.stepLanguageBody")}
             </Text>
 
@@ -98,12 +87,8 @@ export default function LocalizationSetupScreen() {
                     }`}
                     onPress={() => setAppLanguage(language)}
                   >
-                    <Text className="font-uiSemibold text-base text-text">
-                      {language === "ar"
-                        ? "العربية"
-                        : language === "es"
-                        ? "Español"
-                        : "English"}
+                    <Text className="font-uiSemibold text-base text-text" style={{ textAlign }}>
+                      {APP_LANGUAGE_NATIVE_LABELS[language]}
                     </Text>
                   </Pressable>
                 );
@@ -114,16 +99,10 @@ export default function LocalizationSetupScreen() {
 
         {step === 1 ? (
           <View className="mt-8">
-            <Text
-              className="font-uiSemibold text-xl text-text"
-              style={{ textAlign: isRTL ? "right" : "left" }}
-            >
+            <Text className="font-uiSemibold text-xl text-text" style={{ textAlign }}>
               {t("localizationSetup.stepModeTitle")}
             </Text>
-            <Text
-              className="mt-2 font-ui text-sm text-muted"
-              style={{ textAlign: isRTL ? "right" : "left" }}
-            >
+            <Text className="mt-2 font-ui text-sm text-muted" style={{ textAlign }}>
               {t("localizationSetup.stepModeBody")}
             </Text>
 
@@ -147,7 +126,9 @@ export default function LocalizationSetupScreen() {
                     }`}
                     onPress={() => setReadingMode(value)}
                   >
-                    <Text className="font-uiSemibold text-base text-text">{label}</Text>
+                    <Text className="font-uiSemibold text-base text-text" style={{ textAlign }}>
+                      {label}
+                    </Text>
                   </Pressable>
                 );
               })}
@@ -157,16 +138,10 @@ export default function LocalizationSetupScreen() {
 
         {step === 2 ? (
           <View className="mt-8">
-            <Text
-              className="font-uiSemibold text-xl text-text"
-              style={{ textAlign: isRTL ? "right" : "left" }}
-            >
+            <Text className="font-uiSemibold text-xl text-text" style={{ textAlign }}>
               {t("localizationSetup.stepTranslationTitle")}
             </Text>
-            <Text
-              className="mt-2 font-ui text-sm text-muted"
-              style={{ textAlign: isRTL ? "right" : "left" }}
-            >
+            <Text className="mt-2 font-ui text-sm text-muted" style={{ textAlign }}>
               {t("localizationSetup.stepTranslationBody")}
             </Text>
 
@@ -181,12 +156,8 @@ export default function LocalizationSetupScreen() {
                     }`}
                     onPress={() => setTranslationLanguage(language)}
                   >
-                    <Text className="font-uiSemibold text-base text-text">
-                      {language === "ar"
-                        ? "العربية"
-                        : language === "es"
-                        ? "Español"
-                        : "English"}
+                    <Text className="font-uiSemibold text-base text-text" style={{ textAlign }}>
+                      {QURAN_LANGUAGE_NATIVE_LABELS[language]}
                     </Text>
                   </Pressable>
                 );
@@ -196,7 +167,7 @@ export default function LocalizationSetupScreen() {
         ) : null}
       </View>
 
-      <View className="mt-8 flex-row gap-3">
+      <View className="mt-8 gap-3" style={{ flexDirection: rowDirection }}>
         {step > 0 ? (
           <Pressable
             className="flex-1 rounded-2xl border border-border bg-surface px-4 py-4"

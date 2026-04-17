@@ -5,6 +5,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { IconButton } from "@/components/IconButton";
 import { NowPlayingButton } from "@/components/NowPlayingButton";
 import { Screen } from "@/components/Screen";
+import { QURAN_LANGUAGE_NATIVE_LABELS, TAFSIR_LANGUAGE_NATIVE_LABELS } from "@/i18n/languageMetadata";
 import { useAppLocale } from "@/i18n/useAppLocale";
 import { useSettingsStore } from "@/store/settingsStore";
 import { colors } from "@/theme/colors";
@@ -18,16 +19,18 @@ function SettingsLink({
   subtitle: string;
   href: string;
 }) {
+  const { isRTL, textAlign, rowDirection } = useAppLocale();
+
   return (
-    <Pressable className="mt-4 flex-row items-center justify-between" onPress={() => router.push(href)}>
-      <View className="flex-1 pr-4">
-        <Text className="font-uiMedium text-sm text-text">{title}</Text>
-        <Text className="mt-1 font-ui text-sm text-muted" numberOfLines={2}>
+    <Pressable className="mt-4 items-center justify-between" style={{ flexDirection: rowDirection }} onPress={() => router.push(href)}>
+      <View className="flex-1" style={{ paddingEnd: 16 }}>
+        <Text className="font-uiMedium text-sm text-text" style={{ textAlign }}>{title}</Text>
+        <Text className="mt-1 font-ui text-sm text-muted" style={{ textAlign }} numberOfLines={2}>
           {subtitle}
         </Text>
       </View>
       <IconButton
-        name="chevron-right"
+        name={isRTL ? "chevron-left" : "chevron-right"}
         accessibilityLabel={title}
         onPress={() => router.push(href)}
         color={colors.muted}
@@ -66,15 +69,10 @@ export default function SettingsScreen() {
       setVerseLayout: state.setVerseLayout,
     }))
   );
-  const { t } = useAppLocale();
+  const { t, textAlign, rowDirection } = useAppLocale();
 
-  const translationLanguageLabel =
-    quranTranslationLanguage === "ar"
-      ? "Arabic"
-      : quranTranslationLanguage === "es"
-      ? "Spanish"
-      : "English";
-  const tafsirLanguageLabel = tafsirLanguage === "ar" ? "Arabic" : "English";
+  const translationLanguageLabel = QURAN_LANGUAGE_NATIVE_LABELS[quranTranslationLanguage];
+  const tafsirLanguageLabel = TAFSIR_LANGUAGE_NATIVE_LABELS[tafsirLanguage];
 
   return (
     <Screen className="pt-6" padded={false}>
@@ -84,7 +82,7 @@ export default function SettingsScreen() {
 
       <ScrollView className="flex-1 px-6" contentContainerStyle={{ paddingBottom: 24 }}>
         <View className="rounded-2xl border border-border bg-surface p-4">
-          <Text className="font-uiSemibold text-base text-text">{t("settings.languageRegion")}</Text>
+          <Text className="font-uiSemibold text-base text-text" style={{ textAlign }}>{t("settings.languageRegion")}</Text>
           <SettingsLink
             title={t("settings.appLanguage")}
             subtitle={t("settings.languageRegionSubtitle")}
@@ -93,7 +91,7 @@ export default function SettingsScreen() {
         </View>
 
         <View className="mt-4 rounded-2xl border border-border bg-surface p-4">
-          <Text className="font-uiSemibold text-base text-text">{t("settings.quranDisplay")}</Text>
+          <Text className="font-uiSemibold text-base text-text" style={{ textAlign }}>{t("settings.quranDisplay")}</Text>
 
           <SettingsLink
             title={t("settings.translationLanguage")}
@@ -107,10 +105,10 @@ export default function SettingsScreen() {
             href="/settings/tafsir"
           />
 
-          <View className="mt-4 flex-row items-center justify-between">
-            <View className="flex-1 pr-4">
-              <Text className="font-uiMedium text-sm text-text">{t("settings.showTranslation")}</Text>
-              <Text className="mt-1 font-ui text-sm text-muted">{t("settings.showTranslationSubtitle")}</Text>
+          <View className="mt-4 items-center justify-between" style={{ flexDirection: rowDirection }}>
+            <View className="flex-1" style={{ paddingEnd: 16 }}>
+              <Text className="font-uiMedium text-sm text-text" style={{ textAlign }}>{t("settings.showTranslation")}</Text>
+              <Text className="mt-1 font-ui text-sm text-muted" style={{ textAlign }}>{t("settings.showTranslationSubtitle")}</Text>
             </View>
             <Switch
               value={showTranslation}
@@ -120,10 +118,10 @@ export default function SettingsScreen() {
             />
           </View>
 
-          <View className="mt-4 flex-row items-center justify-between">
-            <View className="flex-1 pr-4">
-              <Text className="font-uiMedium text-sm text-text">{t("settings.showTransliteration")}</Text>
-              <Text className="mt-1 font-ui text-sm text-muted">{t("settings.showTransliterationSubtitle")}</Text>
+          <View className="mt-4 items-center justify-between" style={{ flexDirection: rowDirection }}>
+            <View className="flex-1" style={{ paddingEnd: 16 }}>
+              <Text className="font-uiMedium text-sm text-text" style={{ textAlign }}>{t("settings.showTransliteration")}</Text>
+              <Text className="mt-1 font-ui text-sm text-muted" style={{ textAlign }}>{t("settings.showTransliterationSubtitle")}</Text>
             </View>
             <Switch
               value={showTransliteration}
@@ -134,10 +132,10 @@ export default function SettingsScreen() {
           </View>
 
           <View className="mt-4">
-            <Text className="font-uiMedium text-sm text-text">{t("settings.verseLayout")}</Text>
-            <Text className="mt-1 font-ui text-sm text-muted">{t("settings.verseLayoutSubtitle")}</Text>
+            <Text className="font-uiMedium text-sm text-text" style={{ textAlign }}>{t("settings.verseLayout")}</Text>
+            <Text className="mt-1 font-ui text-sm text-muted" style={{ textAlign }}>{t("settings.verseLayoutSubtitle")}</Text>
 
-            <View className="mt-3 flex-row rounded-2xl border border-border bg-bg p-1">
+            <View className="mt-3 rounded-2xl border border-border bg-bg p-1" style={{ flexDirection: rowDirection }}>
               <Pressable
                 className={`flex-1 rounded-xl px-3 py-2 ${verseLayout === "cards" ? "bg-primary" : "bg-transparent"}`}
                 onPress={() => setVerseLayout("cards")}
@@ -159,30 +157,30 @@ export default function SettingsScreen() {
         </View>
 
         <View className="mt-4 rounded-2xl border border-border bg-surface p-4">
-          <Text className="font-uiSemibold text-base text-text">{t("settings.reading")}</Text>
+          <Text className="font-uiSemibold text-base text-text" style={{ textAlign }}>{t("settings.reading")}</Text>
           <SettingsLink
             title={t("readingPlan.title")}
             subtitle={t("readingPlan.subtitle")}
             href="/settings/reading-plan"
           />
 
-          <View className="mt-4 flex-row items-center justify-between">
+          <View className="mt-4 items-center justify-between" style={{ flexDirection: rowDirection }}>
             <View>
-              <Text className="font-uiMedium text-sm text-text">{t("settings.arabicSize")}</Text>
-              <Text className="mt-1 font-ui text-sm text-muted">{arabicFontSize}px</Text>
+              <Text className="font-uiMedium text-sm text-text" style={{ textAlign }}>{t("settings.arabicSize")}</Text>
+              <Text className="mt-1 font-ui text-sm text-muted" style={{ textAlign }}>{arabicFontSize}px</Text>
             </View>
-            <View className="flex-row items-center gap-2">
+            <View className="items-center gap-2" style={{ flexDirection: rowDirection }}>
               <IconButton name="minus" accessibilityLabel={t("settings.arabicSize")} onPress={() => bumpArabicFontSize(-2)} color={colors.text} className="bg-bg" />
               <IconButton name="plus" accessibilityLabel={t("settings.arabicSize")} onPress={() => bumpArabicFontSize(2)} color={colors.text} className="bg-bg" />
             </View>
           </View>
 
-          <View className="mt-3 flex-row items-center justify-between">
+          <View className="mt-3 items-center justify-between" style={{ flexDirection: rowDirection }}>
             <View>
-              <Text className="font-uiMedium text-sm text-text">{t("settings.translationSize")}</Text>
-              <Text className="mt-1 font-ui text-sm text-muted">{translationFontSize}px</Text>
+              <Text className="font-uiMedium text-sm text-text" style={{ textAlign }}>{t("settings.translationSize")}</Text>
+              <Text className="mt-1 font-ui text-sm text-muted" style={{ textAlign }}>{translationFontSize}px</Text>
             </View>
-            <View className="flex-row items-center gap-2">
+            <View className="items-center gap-2" style={{ flexDirection: rowDirection }}>
               <IconButton name="minus" accessibilityLabel={t("settings.translationSize")} onPress={() => bumpTranslationFontSize(-1)} color={colors.text} className="bg-bg" />
               <IconButton name="plus" accessibilityLabel={t("settings.translationSize")} onPress={() => bumpTranslationFontSize(1)} color={colors.text} className="bg-bg" />
             </View>
@@ -190,12 +188,12 @@ export default function SettingsScreen() {
         </View>
 
         <View className="mt-4 rounded-2xl border border-border bg-surface p-4">
-          <Text className="font-uiSemibold text-base text-text">{t("settings.offline")}</Text>
+          <Text className="font-uiSemibold text-base text-text" style={{ textAlign }}>{t("settings.offline")}</Text>
           <SettingsLink title={t("settings.downloads")} subtitle={t("settings.offlineSubtitle")} href="/settings/downloads" />
         </View>
 
         <View className="mt-4 rounded-2xl border border-border bg-surface p-4">
-          <Text className="font-uiSemibold text-base text-text">{t("settings.notifications")}</Text>
+          <Text className="font-uiSemibold text-base text-text" style={{ textAlign }}>{t("settings.notifications")}</Text>
           <SettingsLink
             title={t("settings.dailyVerseAndPrayerAlerts")}
             subtitle={t("settings.notificationsSubtitle")}
@@ -204,7 +202,7 @@ export default function SettingsScreen() {
         </View>
 
         <View className="mt-4 rounded-2xl border border-border bg-surface p-4">
-          <Text className="font-uiSemibold text-base text-text">{t("settings.cloud")}</Text>
+          <Text className="font-uiSemibold text-base text-text" style={{ textAlign }}>{t("settings.cloud")}</Text>
           <SettingsLink title={t("settings.cloudSync")} subtitle={t("settings.cloudSubtitle")} href="/settings/account" />
         </View>
       </ScrollView>

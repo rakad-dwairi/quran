@@ -34,9 +34,9 @@ import { useSettingsStore } from "@/store/settingsStore";
 import { colors } from "@/theme/colors";
 import { addDays, getReadingPlanPace, getReadingPlanWeeklyReview, READING_MILESTONES, toDayKey } from "@/utils/readingPlan";
 
-function greetingName(input: string | null | undefined) {
+function greetingName(input: string | null | undefined, fallback: string) {
   const trimmed = input?.trim();
-  if (!trimmed) return "friend";
+  if (!trimmed) return fallback;
   return trimmed.split(/\s+/)[0] ?? trimmed;
 }
 
@@ -44,20 +44,21 @@ function formatClock(date: Date) {
   return date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
 }
 
-function formatStreakLabel(days: number) {
-  if (days <= 0) return "Begin your reading rhythm";
-  if (days === 1) return "1 day reading streak";
-  return `${days} day reading streak`;
+function formatStreakLabel(days: number, t: (key: string, options?: Record<string, unknown>) => string) {
+  if (days <= 0) return t("home.streakBegin");
+  if (days === 1) return t("home.streakSingle");
+  return t("home.streakPlural", { count: days });
 }
 
 function ProfileButton() {
   const user = useAuth().user;
+  const { t } = useAppLocale();
   const initial = (user?.email?.trim()?.[0] ?? "U").toUpperCase();
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel="Open settings"
+      accessibilityLabel={t("common.settings")}
       onPress={() => router.push("/settings")}
       className="ml-2 h-10 w-10 overflow-hidden rounded-full border border-border bg-surface active:opacity-80"
     >
@@ -80,7 +81,7 @@ type FeatureItem = {
 };
 
 export default function HomeScreen() {
-  const { t } = useAppLocale();
+  const { appLanguage, t, textAlign, rowDirection } = useAppLocale();
   const user = useAuth().user;
   const [now, setNow] = useState(() => new Date());
   const [prayerPlace, setPrayerPlace] = useState<string | null>(null);
@@ -158,8 +159,8 @@ export default function HomeScreen() {
     }))
   );
 
-  const chaptersQuery = useChaptersQuery({ language: "en" });
-  const recitationsQuery = useRecitationsQuery({ language: "en" });
+  const chaptersQuery = useChaptersQuery({ language: appLanguage });
+  const recitationsQuery = useRecitationsQuery({ language: appLanguage });
 
   useEffect(() => {
     const interval = setInterval(() => setNow(new Date()), 1000);
@@ -219,7 +220,7 @@ export default function HomeScreen() {
     verseKey: todayVerseKey,
     translationId,
     recitationId,
-    language: "en",
+    language: appLanguage,
   });
 
   const chaptersById = useMemo(() => {
@@ -232,8 +233,8 @@ export default function HomeScreen() {
 
   const currentReciterName = useMemo(() => {
     const match = recitationsQuery.data?.find((item) => item.id === recitationId);
-    return match?.reciter_name ?? "Current reciter";
-  }, [recitationId, recitationsQuery.data]);
+    return match?.reciter_name ?? t("home.currentReciter");
+  }, [recitationId, recitationsQuery.data, t]);
 
   const prayerSummary = useMemo(() => {
     if (!prayerCoords) return null;
@@ -250,7 +251,7 @@ export default function HomeScreen() {
     return { built, active, next };
   }, [now, prayerCoords, prayerCalculationMethod, prayerMadhab]);
 
-  const currentPrayerLabel = prayerSummary?.active ? getPrayerLabel(prayerSummary.active) : "Before Fajr";
+  const currentPrayerLabel = prayerSummary?.active ? getPrayerLabel(prayerSummary.active) : t("home.beforeFajr");
   const currentPrayerTime = prayerSummary?.active
     ? formatPrayerTime(prayerSummary.built.times[prayerSummary.active])
     : null;
@@ -269,19 +270,19 @@ export default function HomeScreen() {
 
   const features = useMemo<FeatureItem[]>(
     () => [
-      { key: "quran", label: "Quran", icon: "book-open-page-variant", onPress: () => router.push("/quran") },
-      { key: "prayers", label: "Prayers", icon: "clock-outline", onPress: () => router.push("/prayers") },
-      { key: "duas", label: "Duas", icon: "hands-pray", onPress: () => router.push("/duas") },
-      { key: "tasbih", label: "Tasbih", icon: "counter", onPress: () => router.push("/tasbih") },
-      { key: "qibla", label: "Qibla", icon: "compass-outline", onPress: () => router.push("/prayers") },
-      { key: "bookmarks", label: "Bookmarks", icon: "bookmark-outline", onPress: () => router.push("/bookmarks") },
-      { key: "downloads", label: "Downloads", icon: "download-outline", onPress: () => router.push("/settings/downloads") },
+      { key: "quran", label: t("tabs.quran"), icon: "book-open-page-variant", onPress: () => router.push("/quran") },
+      { key: "prayers", label: t("tabs.prayers"), icon: "clock-outline", onPress: () => router.push("/prayers") },
+      { key: "duas", label: t("home.duas"), icon: "hands-pray", onPress: () => router.push("/duas") },
+      { key: "tasbih", label: t("home.tasbih"), icon: "counter", onPress: () => router.push("/tasbih") },
+      { key: "qibla", label: t("home.qibla"), icon: "compass-outline", onPress: () => router.push("/prayers") },
+      { key: "bookmarks", label: t("home.bookmarks"), icon: "bookmark-outline", onPress: () => router.push("/bookmarks") },
+      { key: "downloads", label: t("settings.downloads"), icon: "download-outline", onPress: () => router.push("/settings/downloads") },
       { key: "plan", label: t("readingPlan.title"), icon: "calendar-check-outline", onPress: () => router.push("/settings/reading-plan") },
     ],
     [t]
   );
 
-  const greeting = greetingName(user?.displayName || user?.email?.split("@")[0]);
+  const greeting = greetingName(user?.displayName || user?.email?.split("@")[0], t("home.friend"));
   const todayVerse = todayVerseQuery.data;
   const planPercent = Math.min(
     100,
@@ -332,10 +333,10 @@ export default function HomeScreen() {
   return (
     <Screen className="pt-6">
       <AppHeader
-        title={`Salaam ${greeting}`}
+        title={t("home.greeting", { name: greeting })}
         subtitle={formatClock(now)}
         right={
-          <View className="flex-row items-center">
+          <View className="items-center" style={{ flexDirection: rowDirection }}>
             <NowPlayingButton />
             <ProfileButton />
           </View>
@@ -345,41 +346,51 @@ export default function HomeScreen() {
       <ScrollView className="mt-2 flex-1" contentContainerStyle={{ paddingBottom: 24 }}>
         <View className="gap-4">
           <SectionCard>
-            <Text className="font-ui text-sm text-muted">{prayerPlace ?? "Prayer snapshot"}</Text>
-            <View className="mt-3 flex-row items-start justify-between">
+            <Text className="font-ui text-sm text-muted" style={{ textAlign }}>
+              {prayerPlace ?? t("home.prayerSnapshot")}
+            </Text>
+            <View className="mt-3 items-start justify-between" style={{ flexDirection: rowDirection }}>
               <View className="flex-1 pr-4">
                 <Text className="font-uiSemibold text-lg text-text">{currentPrayerLabel}</Text>
-                <Text className="mt-1 font-ui text-sm leading-6 text-muted">
-                  {currentPrayerTime ? `Now: ${currentPrayerLabel} · ${currentPrayerTime}` : "Set prayer location to load times"}
+                <Text className="mt-1 font-ui text-sm leading-6 text-muted" style={{ textAlign }}>
+                  {currentPrayerTime
+                    ? t("home.nowPrayer", { prayer: currentPrayerLabel, time: currentPrayerTime })
+                    : t("home.setPrayerLocation")}
                 </Text>
               </View>
-              <StatusBadge label={prayerSummary ? "Live" : "Needs setup"} tone={prayerSummary ? "success" : "default"} />
+              <StatusBadge label={prayerSummary ? t("home.live") : t("home.needsSetup")} tone={prayerSummary ? "success" : "default"} />
             </View>
 
             {prayerSummary ? (
               <View className="mt-4 rounded-2xl bg-secondary px-4 py-4">
-                <Text className="font-uiMedium text-sm text-text">
-                  Next: {getPrayerLabel(prayerSummary.next.id)} in {formatPrayerCountdown(prayerSummary.next.at.getTime() - now.getTime())}
+                <Text className="font-uiMedium text-sm text-text" style={{ textAlign }}>
+                  {t("home.nextPrayer", {
+                    prayer: getPrayerLabel(prayerSummary.next.id),
+                    countdown: formatPrayerCountdown(prayerSummary.next.at.getTime() - now.getTime()),
+                  })}
                 </Text>
                 <Text className="mt-1 font-ui text-sm text-muted">{formatPrayerTime(prayerSummary.next.at)}</Text>
               </View>
             ) : (
               <View className="mt-4">
-                <ActionButton label="Open Prayer Alerts" onPress={() => router.push("/settings/notifications")} />
+                <ActionButton label={t("home.openPrayerAlerts")} onPress={() => router.push("/settings/notifications")} />
               </View>
             )}
           </SectionCard>
 
           <SectionCard>
-            <Text className="font-uiSemibold text-base text-text">Continue reading</Text>
+            <Text className="font-uiSemibold text-base text-text" style={{ textAlign }}>{t("home.continueReading")}</Text>
             {continueReadingLabel && lastReadChapterId && lastReadVerseKey ? (
               <>
-                <Text className="mt-2 font-ui text-sm leading-6 text-muted">
-                  {continueReadingLabel.chapterName} · Ayah {continueReadingLabel.verseNumber}
+                <Text className="mt-2 font-ui text-sm leading-6 text-muted" style={{ textAlign }}>
+                  {t("home.readingReference", {
+                    chapterName: continueReadingLabel.chapterName,
+                    verse: continueReadingLabel.verseNumber,
+                  })}
                 </Text>
                 <View className="mt-4">
                   <ActionButton
-                    label="Continue Reading"
+                    label={t("home.continueReadingAction")}
                     onPress={() =>
                       router.push({
                         pathname: `/surah/${lastReadChapterId}`,
@@ -391,20 +402,20 @@ export default function HomeScreen() {
               </>
             ) : (
               <>
-                <Text className="mt-2 font-ui text-sm leading-6 text-muted">
-                  Open any Surah and your last reading place will appear here.
+                <Text className="mt-2 font-ui text-sm leading-6 text-muted" style={{ textAlign }}>
+                  {t("home.continueReadingEmpty")}
                 </Text>
                 <View className="mt-4">
-                  <ActionButton label="Start Reading" onPress={() => router.push("/quran")} />
+                  <ActionButton label={t("home.startReading")} onPress={() => router.push("/quran")} />
                 </View>
               </>
             )}
           </SectionCard>
 
           <SectionCard>
-            <View className="flex-row items-center justify-between">
-              <Text className="font-uiSemibold text-base text-text">Today's verse</Text>
-              <Text className="font-ui text-xs text-muted">{todayVerseKey || "Loading"}</Text>
+            <View className="items-center justify-between" style={{ flexDirection: rowDirection }}>
+              <Text className="font-uiSemibold text-base text-text" style={{ textAlign }}>{t("home.todaysVerse")}</Text>
+              <Text className="font-ui text-xs text-muted">{todayVerseKey || t("common.loading")}</Text>
             </View>
 
             {todayVerse ? (
@@ -415,13 +426,13 @@ export default function HomeScreen() {
                 >
                   {todayVerse.text_uthmani}
                 </Text>
-                <Text className="mt-3 font-serif text-sm leading-6 text-muted">
-                  {todayVerse.translations?.[0]?.textPlain ?? "Translation not available for the current setup."}
+                <Text className="mt-3 font-serif text-sm leading-6 text-muted" style={{ textAlign }}>
+                  {todayVerse.translations?.[0]?.textPlain ?? t("home.translationUnavailable")}
                 </Text>
 
-                <View className="mt-4 flex-row gap-3">
+                <View className="mt-4 gap-3" style={{ flexDirection: rowDirection }}>
                   <ActionButton
-                    label={savedTodayVerse ? "Saved" : "Save verse"}
+                    label={savedTodayVerse ? t("home.saved") : t("home.saveVerse")}
                     variant={savedTodayVerse ? "secondary" : "primary"}
                     className="flex-1"
                     onPress={() => {
@@ -436,7 +447,7 @@ export default function HomeScreen() {
                     }}
                   />
                   <ActionButton
-                    label="Share verse"
+                    label={t("home.shareVerse")}
                     variant="secondary"
                     className="flex-1"
                     onPress={async () => {
@@ -448,36 +459,42 @@ export default function HomeScreen() {
                 </View>
               </>
             ) : todayVerseQuery.isLoading ? (
-              <Text className="mt-3 font-ui text-sm text-muted">Loading today's verse...</Text>
+              <Text className="mt-3 font-ui text-sm text-muted" style={{ textAlign }}>{t("home.loadingTodaysVerse")}</Text>
             ) : (
               <EmptyState
                 icon="book-outline"
-                title="Today's verse is unavailable right now"
-                body="We could not load the verse content yet. You can still continue reading or browse the Quran."
-                actionLabel="Browse Quran"
+                title={t("home.todaysVerseUnavailableTitle")}
+                body={t("home.todaysVerseUnavailableBody")}
+                actionLabel={t("home.browseQuran")}
                 onAction={() => router.push("/quran")}
               />
             )}
           </SectionCard>
 
-          <View className="flex-row gap-3">
+          <View className="gap-3" style={{ flexDirection: rowDirection }}>
             <SectionCard className="flex-1">
-              <Text className="font-ui text-sm text-muted">Habit</Text>
-              <Text className="mt-2 font-uiSemibold text-lg text-text">{formatStreakLabel(readingStreak)}</Text>
+              <Text className="font-ui text-sm text-muted" style={{ textAlign }}>{t("home.habit")}</Text>
+              <Text className="mt-2 font-uiSemibold text-lg text-text" style={{ textAlign }}>
+                {formatStreakLabel(readingStreak, t)}
+              </Text>
             </SectionCard>
             <Pressable className="flex-1 active:opacity-80" onPress={() => router.push("/bookmarks")}>
               <SectionCard>
-                <Text className="font-ui text-sm text-muted">Saved content</Text>
-                <Text className="mt-2 font-uiSemibold text-lg text-text">{favorites.length} saved verses</Text>
-                <Text className="mt-1 font-ui text-sm text-muted">{bookmarks.length} bookmarks</Text>
+                <Text className="font-ui text-sm text-muted" style={{ textAlign }}>{t("home.savedContent")}</Text>
+                <Text className="mt-2 font-uiSemibold text-lg text-text" style={{ textAlign }}>
+                  {t("home.savedVersesCount", { count: favorites.length })}
+                </Text>
+                <Text className="mt-1 font-ui text-sm text-muted" style={{ textAlign }}>
+                  {t("home.bookmarksCount", { count: bookmarks.length })}
+                </Text>
               </SectionCard>
             </Pressable>
           </View>
 
           <SectionCard>
-            <View className="flex-row items-center justify-between">
-              <Text className="font-uiSemibold text-base text-text">Feature shortcuts</Text>
-              <StatusBadge label="Daily use" />
+            <View className="items-center justify-between" style={{ flexDirection: rowDirection }}>
+              <Text className="font-uiSemibold text-base text-text" style={{ textAlign }}>{t("home.featureShortcuts")}</Text>
+              <StatusBadge label={t("home.dailyUse")} />
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-4">
               {features.map((feature, index) => (
@@ -634,34 +651,34 @@ export default function HomeScreen() {
           </SectionCard>
 
           <SectionCard>
-            <Text className="font-uiSemibold text-base text-text">Recitation</Text>
+            <Text className="font-uiSemibold text-base text-text" style={{ textAlign }}>{t("home.recitation")}</Text>
             {audioChapterId ? (
               <>
-                <Text className="mt-2 font-ui text-sm leading-6 text-muted">
-                  {audioTitle ?? `Surah ${audioChapterId}`} · {audioMode === "verse" ? "Verse by verse" : "Full Surah"}
+                <Text className="mt-2 font-ui text-sm leading-6 text-muted" style={{ textAlign }}>
+                  {audioTitle ?? t("quran.surahOnlyReference", { chapterId: audioChapterId })} · {audioMode === "verse" ? t("home.verseByVerse") : t("home.fullSurah")}
                 </Text>
-                <Text className="mt-1 font-ui text-sm text-muted">
-                  {currentReciterName} · {isPlaying ? "Playing" : "Paused"}
+                <Text className="mt-1 font-ui text-sm text-muted" style={{ textAlign }}>
+                  {currentReciterName} · {isPlaying ? t("home.playing") : t("home.paused")}
                 </Text>
                 <View className="mt-4">
-                  <ActionButton label="Resume" onPress={() => router.push("/player")} />
+                  <ActionButton label={t("common.resume")} onPress={() => router.push("/player")} />
                 </View>
               </>
             ) : (
               <EmptyState
                 icon="play-circle-outline"
-                title="No recitation in progress"
-                body="Start a recitation from any Surah and you will be able to resume it here."
-                actionLabel="Browse Quran"
+                title={t("home.noRecitationTitle")}
+                body={t("home.noRecitationBody")}
+                actionLabel={t("home.browseQuran")}
                 onAction={() => router.push("/quran")}
               />
             )}
           </SectionCard>
 
           <SectionCard>
-            <Text className="font-uiSemibold text-base text-text">Daily reflection</Text>
-            <Text className="mt-2 font-ui text-sm leading-6 text-muted">
-              Return with a calm heart, even if today's reading is brief. Small, steady engagement is more valuable than a rushed session.
+            <Text className="font-uiSemibold text-base text-text" style={{ textAlign }}>{t("home.dailyReflection")}</Text>
+            <Text className="mt-2 font-ui text-sm leading-6 text-muted" style={{ textAlign }}>
+              {t("home.dailyReflectionBody")}
             </Text>
           </SectionCard>
         </View>

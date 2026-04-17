@@ -9,6 +9,7 @@ import { IconButton } from "@/components/IconButton";
 import { NowPlayingButton } from "@/components/NowPlayingButton";
 import { Screen } from "@/components/Screen";
 import { PRAYER_IDS, type PrayerId } from "@/constants/prayer";
+import { useAppLocale } from "@/i18n/useAppLocale";
 import { buildManualPrayerLocation, getAutoPrayerLocation, type PrayerLocationResult } from "@/services/prayerLocation";
 import { schedulePrayerNotifications } from "@/services/prayerNotifications";
 import {
@@ -27,7 +28,7 @@ import { colors } from "@/theme/colors";
 
 function formatDegrees(value: number) {
   const normalized = ((value % 360) + 360) % 360;
-  return `${Math.round(normalized)} deg`;
+  return `${Math.round(normalized)}°`;
 }
 
 function fallbackPlace(location: PrayerLocationResult | null) {
@@ -36,7 +37,26 @@ function fallbackPlace(location: PrayerLocationResult | null) {
   return `${location.coords.latitude.toFixed(3)}, ${location.coords.longitude.toFixed(3)}`;
 }
 
+function KaabaMarker({ rotation }: { rotation: number }) {
+  return (
+    <View
+      pointerEvents="none"
+      className="absolute h-48 w-48 items-center"
+      style={{ transform: [{ rotate: `${rotation}deg` }] }}
+    >
+      <View className="mt-1 items-center">
+        <View className="h-12 w-12 items-center rounded-xl border border-[#B18A3D] bg-text">
+          <View className="mt-2 h-1.5 w-full bg-accent" />
+          <View className="mt-4 h-4 w-2 rounded-sm bg-[#B18A3D]" />
+        </View>
+        <View className="h-20 w-1 rounded-full bg-primary" />
+      </View>
+    </View>
+  );
+}
+
 export default function PrayersScreen() {
+  const { t, textAlign, rowDirection, isRTL } = useAppLocale();
   const {
     prayerNotificationsEnabled,
     prayerAdhanEnabled,
@@ -137,7 +157,7 @@ export default function PrayersScreen() {
           : await getAutoPrayerLocation({ requestPermission: true });
 
       if (!nextLocation) {
-        throw new Error("Set a manual city/country in Prayer Alerts before using manual location.");
+        throw new Error(t("prayers.manualLocationError"));
       }
 
       setLocation(nextLocation);
@@ -148,7 +168,7 @@ export default function PrayersScreen() {
     } catch (e) {
       setLocation(null);
       setCanWatchHeading(false);
-      setError(e instanceof Error ? e.message : "Could not load prayer times.");
+      setError(e instanceof Error ? e.message : t("prayers.loadErrorTitle"));
     } finally {
       setBusy(false);
     }
@@ -236,13 +256,17 @@ export default function PrayersScreen() {
   return (
     <Screen className="pt-6">
       <AppHeader
-        title="Prayers"
-        subtitle={placeLabel ? `Today in ${placeLabel}` : "Prayer times near you."}
+        title={t("tabs.prayers")}
+        subtitle={
+          placeLabel
+            ? t("prayers.subtitleWithPlace", { place: placeLabel })
+            : t("prayers.subtitleFallback")
+        }
         right={
-          <View className="flex-row items-center">
+          <View className="items-center" style={{ flexDirection: rowDirection }}>
             <IconButton
               name="refresh"
-              accessibilityLabel="Refresh prayer times"
+              accessibilityLabel={t("prayers.refreshAria")}
               onPress={() => refresh()}
               color={colors.text}
             />
@@ -254,38 +278,44 @@ export default function PrayersScreen() {
       {busy && !computed ? (
         <View className="flex-1 items-center justify-center py-10">
           <ActivityIndicator />
-          <Text className="mt-3 font-ui text-muted">Getting prayer times...</Text>
+          <Text className="mt-3 font-ui text-muted" style={{ textAlign }}>
+            {t("prayers.loading")}
+          </Text>
         </View>
       ) : error ? (
         <View className="rounded-2xl border border-border bg-surface px-4 py-6">
-          <Text className="font-uiSemibold text-base text-text">Could not load prayer times</Text>
-          <Text className="mt-2 font-ui text-muted">{error}</Text>
-          <View className="mt-5 flex-row gap-3">
+          <Text className="font-uiSemibold text-base text-text" style={{ textAlign }}>
+            {t("prayers.loadErrorTitle")}
+          </Text>
+          <Text className="mt-2 font-ui text-muted" style={{ textAlign }}>{error}</Text>
+          <View className="mt-5 gap-3" style={{ flexDirection: rowDirection }}>
             <Pressable
               className="flex-1 rounded-2xl bg-primary px-5 py-3 active:opacity-80"
               onPress={() => refresh()}
             >
               <Text className="text-center font-uiSemibold text-primaryForeground">
-                {busy ? "Refreshing..." : "Retry"}
+                {busy ? t("prayers.refreshing") : t("common.retry")}
               </Text>
             </Pressable>
             <Pressable
               className="flex-1 rounded-2xl border border-border bg-bg px-5 py-3 active:opacity-80"
               onPress={() => router.push("/settings/notifications")}
             >
-              <Text className="text-center font-uiSemibold text-text">Prayer Alerts</Text>
+              <Text className="text-center font-uiSemibold text-text">{t("settings.dailyVerseAndPrayerAlerts")}</Text>
             </Pressable>
           </View>
         </View>
       ) : computed ? (
         <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 24 }}>
           <View className="rounded-3xl border border-border bg-surface p-4">
-            <Text className="font-ui text-sm text-muted">{formatPrayerDate(now)}</Text>
-            <Text className="mt-1 font-uiSemibold text-lg text-text">{placeLabel ?? "Current location"}</Text>
+            <Text className="font-ui text-sm text-muted" style={{ textAlign }}>{formatPrayerDate(now)}</Text>
+            <Text className="mt-1 font-uiSemibold text-lg text-text" style={{ textAlign }}>
+              {placeLabel ?? t("prayers.currentLocation")}
+            </Text>
 
             <View className="mt-4 rounded-2xl bg-primary px-4 py-4">
-              <Text className="font-uiMedium text-sm text-primaryForeground">
-                Next prayer: {getPrayerLabel(computed.next.id)} in{" "}
+              <Text className="font-uiMedium text-sm text-primaryForeground" style={{ textAlign }}>
+                {t("prayers.nextPrayerLine", { prayer: getPrayerLabel(computed.next.id) })}{" "}
                 {formatPrayerCountdown(computed.next.at.getTime() - now.getTime())}
               </Text>
               <Text className="mt-1 font-ui text-sm text-primaryForeground opacity-90">
@@ -304,25 +334,27 @@ export default function PrayersScreen() {
               </View>
               <View className="rounded-full bg-bg px-3 py-1">
                 <Text className="font-ui text-xs text-muted">
-                  Alerts {prayerNotificationsEnabled ? "on" : "off"}
+                  {t("prayers.alertsStatus", {
+                    status: prayerNotificationsEnabled ? t("common.on") : t("common.off"),
+                  })}
                 </Text>
               </View>
             </View>
           </View>
 
           <View className="mt-4 rounded-3xl border border-border bg-surface p-4">
-            <View className="flex-row items-center justify-between">
+            <View className="items-center justify-between" style={{ flexDirection: rowDirection }}>
               <View>
-                <Text className="font-uiSemibold text-base text-text">Today</Text>
-                <Text className="mt-1 font-ui text-sm text-muted">
-                  Bell toggles control each prayer alert.
+                <Text className="font-uiSemibold text-base text-text" style={{ textAlign }}>{t("prayers.today")}</Text>
+                <Text className="mt-1 font-ui text-sm text-muted" style={{ textAlign }}>
+                  {t("prayers.bellHint")}
                 </Text>
               </View>
               <Pressable
                 className="rounded-full bg-bg px-3 py-2 active:opacity-80"
                 onPress={() => router.push("/settings/notifications")}
               >
-                <Text className="font-uiMedium text-xs text-text">Settings</Text>
+                <Text className="font-uiMedium text-xs text-text">{t("common.settings")}</Text>
               </Pressable>
             </View>
 
@@ -336,45 +368,58 @@ export default function PrayersScreen() {
                 return (
                   <View
                     key={prayerId}
-                    className={`flex-row items-center rounded-2xl border px-4 py-3 ${
+                    className={`items-center rounded-2xl border px-4 py-3 ${
                       isActive
                         ? "border-primary bg-primaryMuted"
                         : isNext
                           ? "border-accent bg-bg"
                           : "border-border bg-bg"
                     }`}
+                    style={{ flexDirection: rowDirection }}
                   >
                     <View className="flex-1">
-                      <View className="flex-row items-center">
+                      <View className="items-center" style={{ flexDirection: rowDirection }}>
                         <Text className={`font-uiSemibold text-base ${isActive ? "text-primary" : "text-text"}`}>
                           {getPrayerLabel(prayerId)}
                         </Text>
                         {isActive ? (
-                          <Text className="ml-2 rounded-full bg-primary px-2 py-0.5 font-uiMedium text-xs text-primaryForeground">
-                            Active
+                          <Text
+                            className="rounded-full bg-primary px-2 py-0.5 font-uiMedium text-xs text-primaryForeground"
+                            style={{ marginStart: 8 }}
+                          >
+                            {t("prayers.active")}
                           </Text>
                         ) : isNext ? (
-                          <Text className="ml-2 rounded-full bg-accent px-2 py-0.5 font-uiMedium text-xs text-accentForeground">
-                            Next
+                          <Text
+                            className="rounded-full bg-accent px-2 py-0.5 font-uiMedium text-xs text-accentForeground"
+                            style={{ marginStart: 8 }}
+                          >
+                            {t("prayers.next")}
                           </Text>
                         ) : null}
                       </View>
-                      <Text className="mt-1 font-ui text-sm text-muted">
+                      <Text className="mt-1 font-ui text-sm text-muted" style={{ textAlign }}>
                         {notificationsOn
-                          ? "Notification enabled"
+                          ? t("prayers.notificationEnabled")
                           : savedOn
-                            ? "Global alerts are off"
-                            : "Notification disabled"}
+                            ? t("prayers.globalAlertsOff")
+                            : t("prayers.notificationDisabled")}
                       </Text>
                     </View>
 
-                    <Text className={`mr-4 font-uiSemibold text-base ${isActive ? "text-primary" : "text-text"}`}>
+                    <Text
+                      className={`font-uiSemibold text-base ${isActive ? "text-primary" : "text-text"}`}
+                      style={{ marginEnd: 16 }}
+                    >
                       {formatPrayerTime(computed.times[prayerId])}
                     </Text>
 
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel={`${savedOn ? "Disable" : "Enable"} ${getPrayerLabel(prayerId)} alert`}
+                      accessibilityLabel={t("prayers.toggleAlertAria", {
+                        action: savedOn ? t("common.disable") : t("common.enable"),
+                        prayer: getPrayerLabel(prayerId),
+                      })}
                       className="h-11 w-11 items-center justify-center rounded-full bg-surface active:opacity-80"
                       onPress={() => togglePrayerNotification(prayerId)}
                     >
@@ -391,46 +436,54 @@ export default function PrayersScreen() {
           </View>
 
           <View className="mt-4 rounded-3xl border border-border bg-surface p-4">
-            <Text className="font-uiSemibold text-base text-text">Qibla</Text>
-            <Text className="mt-1 font-ui text-sm text-muted">
+            <Text className="font-uiSemibold text-base text-text" style={{ textAlign }}>{t("prayers.qiblaTitle")}</Text>
+            <Text className="mt-1 font-ui text-sm text-muted" style={{ textAlign }}>
               {heading === null
-                ? `Direction to Makkah: ${formatDegrees(computed.qiblaDegrees)}`
-                : "Rotate your phone until the arrow points up."}
+                ? t("prayers.qiblaNoHeading", { degrees: formatDegrees(computed.qiblaDegrees) })
+                : t("prayers.qiblaWithHeading")}
             </Text>
 
             <View className="mt-5 items-center">
               <View className="h-56 w-56 items-center justify-center rounded-full border border-border bg-bg">
                 <Text className="absolute top-4 font-uiSemibold text-xs text-muted">N</Text>
+                <Text className="absolute left-4 font-ui text-[10px] text-muted">W</Text>
+                <Text className="absolute right-4 font-ui text-[10px] text-muted">E</Text>
+                <Text className="absolute bottom-10 font-ui text-[10px] text-muted">S</Text>
                 <Text className="absolute bottom-4 font-ui text-xs text-muted">
                   {formatDegrees(computed.qiblaDegrees)}
                 </Text>
+                <View className="h-4 w-4 rounded-full border border-primary bg-primaryMuted" />
 
                 {qiblaRotation !== null ? (
-                  <View style={{ transform: [{ rotate: `${qiblaRotation}deg` }] }}>
-                    <MaterialCommunityIcons name="navigation" size={56} color={colors.primary} />
-                  </View>
+                  <KaabaMarker rotation={qiblaRotation} />
                 ) : null}
               </View>
 
               {heading === null ? (
                 <Text className="mt-3 text-center font-ui text-xs text-muted">
-                  Compass heading may not be available on simulators.
+                  {t("prayers.qiblaSimulatorHint")}
                 </Text>
               ) : (
-                <Text className="mt-3 font-ui text-xs text-muted">Heading: {formatDegrees(heading)}</Text>
+                <Text className="mt-3 font-ui text-xs text-muted">
+                  {t("prayers.headingLabel", { degrees: formatDegrees(heading) })}
+                </Text>
               )}
             </View>
           </View>
         </ScrollView>
       ) : (
         <View className="rounded-2xl border border-border bg-surface px-4 py-6">
-          <Text className="font-uiSemibold text-base text-text">Prayer times</Text>
-          <Text className="mt-2 font-ui text-muted">Tap refresh to load your location.</Text>
+          <Text className="font-uiSemibold text-base text-text" style={{ textAlign }}>
+            {t("prayers.emptyTitle")}
+          </Text>
+          <Text className="mt-2 font-ui text-muted" style={{ textAlign }}>{t("prayers.emptyBody")}</Text>
           <Pressable
             className="mt-5 self-start rounded-2xl bg-primary px-5 py-3 active:opacity-80"
             onPress={() => refresh()}
           >
-            <Text className="font-uiSemibold text-primaryForeground">{busy ? "Refreshing..." : "Refresh"}</Text>
+            <Text className="font-uiSemibold text-primaryForeground">
+              {busy ? t("prayers.refreshing") : t("common.refresh")}
+            </Text>
           </Pressable>
         </View>
       )}

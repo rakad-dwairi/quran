@@ -53,7 +53,7 @@ export function AppProviders({ children }: PropsWithChildren) {
         >
           <PrayerNotificationsBootstrap />
           <ReadingPlanNotificationsBootstrap />
-          <View style={{ flex: 1, direction: isRTL ? "rtl" : "ltr" }}>{children}</View>
+          <View style={{ flex: 1 }}>{children}</View>
         </PersistQueryClientProvider>
       </AdsProvider>
     </SafeAreaProvider>

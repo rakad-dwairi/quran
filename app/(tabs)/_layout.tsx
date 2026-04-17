@@ -45,7 +45,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="ai"
         options={{
-          title: "Study",
+          title: t("tabs.study"),
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="text-box-search-outline" size={size} color={color} />
           ),
@@ -54,14 +54,13 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="new"
         options={{
-          title: "Discover",
+          title: t("tabs.discover"),
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="compass-rose" size={size} color={color} />
           ),
         }}
       />
 
-      {/* Hidden routes (still navigable via buttons) */}
       <Tabs.Screen name="search" options={{ href: null }} />
       <Tabs.Screen name="bookmarks" options={{ href: null }} />
       <Tabs.Screen name="settings" options={{ href: null }} />

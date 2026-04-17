@@ -16,12 +16,12 @@ export function AppHeader({
   showBack?: boolean;
   right?: ReactNode;
 }) {
-  const { t, isRTL } = useAppLocale();
+  const { t, isRTL, rowDirection, textAlign } = useAppLocale();
 
   return (
     <View className="pb-6">
-      <View className={`items-center justify-between ${isRTL ? "flex-row-reverse" : "flex-row"}`}>
-        <View className={`items-center ${isRTL ? "flex-row-reverse" : "flex-row"}`}>
+      <View className="items-center justify-between" style={{ flexDirection: rowDirection }}>
+        <View className="min-w-0 flex-1 items-center" style={{ flexDirection: rowDirection }}>
           {showBack ? (
             <IconButton
               name={isRTL ? "chevron-right" : "chevron-left"}
@@ -31,19 +31,19 @@ export function AppHeader({
               className={isRTL ? "-mr-2" : "-ml-2"}
             />
           ) : null}
-          <View>
-            <Text className="font-uiSemibold text-[28px] text-text" style={{ textAlign: isRTL ? "right" : "left" }}>
+          <View className="min-w-0 flex-1">
+            <Text className="font-uiSemibold text-[28px] text-text" style={{ textAlign }}>
               {title}
             </Text>
             {subtitle ? (
-              <Text className="mt-1 font-ui text-sm leading-6 text-muted" style={{ textAlign: isRTL ? "right" : "left" }}>
+              <Text className="mt-1 font-ui text-sm leading-6 text-muted" style={{ textAlign }}>
                 {subtitle}
               </Text>
             ) : null}
           </View>
         </View>
 
-        {right ? <View className={`items-center ${isRTL ? "flex-row-reverse" : "flex-row"}`}>{right}</View> : null}
+        {right ? <View className="items-center" style={{ flexDirection: rowDirection }}>{right}</View> : null}
       </View>
     </View>
   );

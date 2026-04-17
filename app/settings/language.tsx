@@ -4,6 +4,7 @@ import { useShallow } from "zustand/react/shallow";
 import { AppHeader } from "@/components/AppHeader";
 import { Screen } from "@/components/Screen";
 import { type AppLanguage } from "@/i18n/config";
+import { APP_LANGUAGE_NATIVE_LABELS } from "@/i18n/languageMetadata";
 import { useAppLocale } from "@/i18n/useAppLocale";
 import { useSettingsStore } from "@/store/settingsStore";
 
@@ -20,7 +21,7 @@ export default function LanguageSettingsScreen() {
         setCalendarPreference: state.setCalendarPreference,
       }))
     );
-  const { t, isRTL } = useAppLocale();
+  const { t, textAlign, rowDirection } = useAppLocale();
 
   return (
     <Screen className="pt-6">
@@ -28,12 +29,12 @@ export default function LanguageSettingsScreen() {
       <AppHeader title={t("settings.languageRegion")} subtitle={t("settings.languageRegionSubtitle")} showBack />
 
       <View className="rounded-2xl border border-border bg-surface p-4">
-        <Text className="font-uiSemibold text-base text-text">{t("settings.appLanguage")}</Text>
+        <Text className="font-uiSemibold text-base text-text" style={{ textAlign }}>
+          {t("settings.appLanguage")}
+        </Text>
         <View className="mt-4 gap-2">
           {APP_LANGUAGES.map((language) => {
             const selected = language === appLanguage;
-            const label =
-              language === "ar" ? "العربية" : language === "es" ? "Español" : "English";
             return (
               <Pressable
                 key={language}
@@ -42,7 +43,9 @@ export default function LanguageSettingsScreen() {
                 }`}
                 onPress={() => setAppLanguage(language)}
               >
-                <Text className="font-uiSemibold text-sm text-text">{label}</Text>
+                <Text className="font-uiSemibold text-sm text-text" style={{ textAlign }}>
+                  {APP_LANGUAGE_NATIVE_LABELS[language]}
+                </Text>
               </Pressable>
             );
           })}
@@ -50,13 +53,17 @@ export default function LanguageSettingsScreen() {
       </View>
 
       <View className="mt-4 rounded-2xl border border-border bg-surface p-4">
-        <Text className="font-uiSemibold text-base text-text">{t("settings.region")}</Text>
-        <Text className="mt-2 font-ui text-sm text-muted" style={{ textAlign: isRTL ? "right" : "left" }}>
+        <Text className="font-uiSemibold text-base text-text" style={{ textAlign }}>
+          {t("settings.region")}
+        </Text>
+        <Text className="mt-2 font-ui text-sm text-muted" style={{ textAlign }}>
           {regionCountry || "-"}
         </Text>
 
-        <Text className="mt-5 font-uiSemibold text-base text-text">{t("settings.calendar")}</Text>
-        <View className="mt-3 flex-row rounded-2xl border border-border bg-bg p-1">
+        <Text className="mt-5 font-uiSemibold text-base text-text" style={{ textAlign }}>
+          {t("settings.calendar")}
+        </Text>
+        <View className="mt-3 rounded-2xl border border-border bg-bg p-1" style={{ flexDirection: rowDirection }}>
           {(["gregorian", "hijri"] as const).map((value) => {
             const selected = calendarPreference === value;
             return (
