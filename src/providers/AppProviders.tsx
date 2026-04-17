@@ -11,6 +11,10 @@ import i18n from "@/i18n";
 import { isRTLAppLanguage } from "@/i18n/config";
 import { resolvePrayerLocation } from "@/services/prayerLocation";
 import { schedulePrayerNotifications } from "@/services/prayerNotifications";
+import {
+  cancelReadingPlanNotifications,
+  scheduleReadingPlanNotifications,
+} from "@/services/readingPlanNotifications";
 import { useSettingsStore } from "@/store/settingsStore";
 
 const queryClient = new QueryClient({
@@ -48,6 +52,7 @@ export function AppProviders({ children }: PropsWithChildren) {
           }}
         >
           <PrayerNotificationsBootstrap />
+          <ReadingPlanNotificationsBootstrap />
           <View style={{ flex: 1, direction: isRTL ? "rtl" : "ltr" }}>{children}</View>
         </PersistQueryClientProvider>
       </AdsProvider>
@@ -144,6 +149,56 @@ function PrayerNotificationsBootstrap() {
     prayerReminderMinutes,
     prayerPerPrayerNotifications,
     appLanguage,
+  ]);
+
+  return null;
+}
+
+function ReadingPlanNotificationsBootstrap() {
+  const {
+    appLanguage,
+    readingPlanEnabled,
+    readingPlanReminderEnabled,
+    readingPlanReminderHour,
+    readingPlanReminderMinute,
+  } = useSettingsStore(
+    useShallow((state) => ({
+      appLanguage: state.appLanguage,
+      readingPlanEnabled: state.readingPlanEnabled,
+      readingPlanReminderEnabled: state.readingPlanReminderEnabled,
+      readingPlanReminderHour: state.readingPlanReminderHour,
+      readingPlanReminderMinute: state.readingPlanReminderMinute,
+    }))
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!readingPlanEnabled || !readingPlanReminderEnabled) {
+        await cancelReadingPlanNotifications();
+        return;
+      }
+      try {
+        await scheduleReadingPlanNotifications({
+          hour: readingPlanReminderHour,
+          minute: readingPlanReminderMinute,
+          appLanguage,
+          daysAhead: 14,
+        });
+      } catch {
+        if (cancelled) return;
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    appLanguage,
+    readingPlanEnabled,
+    readingPlanReminderEnabled,
+    readingPlanReminderHour,
+    readingPlanReminderMinute,
   ]);
 
   return null;

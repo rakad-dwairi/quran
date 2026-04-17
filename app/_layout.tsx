@@ -136,6 +136,11 @@ function RootNavigator() {
         return;
       }
 
+      if (data.type === "readingPlan") {
+        router.push("/settings/reading-plan");
+        return;
+      }
+
       if (data.type !== "dailyVerse") return;
 
       const chapterId = typeof data.chapterId === "number" ? data.chapterId : Number(data.chapterId);

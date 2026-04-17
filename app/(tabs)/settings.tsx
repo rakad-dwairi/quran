@@ -160,6 +160,11 @@ export default function SettingsScreen() {
 
         <View className="mt-4 rounded-2xl border border-border bg-surface p-4">
           <Text className="font-uiSemibold text-base text-text">{t("settings.reading")}</Text>
+          <SettingsLink
+            title={t("readingPlan.title")}
+            subtitle={t("readingPlan.subtitle")}
+            href="/settings/reading-plan"
+          />
 
           <View className="mt-4 flex-row items-center justify-between">
             <View>

@@ -7,6 +7,7 @@ import { ActionButton } from "@/components/ActionButton";
 import { AppHeader } from "@/components/AppHeader";
 import { EmptyState } from "@/components/EmptyState";
 import { NowPlayingButton } from "@/components/NowPlayingButton";
+import { ReadingWeekStrip } from "@/components/ReadingWeekStrip";
 import { Screen } from "@/components/Screen";
 import { SectionCard } from "@/components/SectionCard";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -15,6 +16,7 @@ import {
   useRecitationsQuery,
   useVerseByKeyQuery,
 } from "@/hooks/quranQueries";
+import { useAppLocale } from "@/i18n/useAppLocale";
 import { useAuth } from "@/providers/AuthProvider";
 import { buildManualPrayerLocation, resolvePrayerLocation } from "@/services/prayerLocation";
 import {
@@ -30,6 +32,7 @@ import { useLibraryStore } from "@/store/libraryStore";
 import { useAudioStore } from "@/store/audioStore";
 import { useSettingsStore } from "@/store/settingsStore";
 import { colors } from "@/theme/colors";
+import { addDays, getReadingPlanPace, getReadingPlanWeeklyReview, READING_MILESTONES, toDayKey } from "@/utils/readingPlan";
 
 function greetingName(input: string | null | undefined) {
   const trimmed = input?.trim();
@@ -77,6 +80,7 @@ type FeatureItem = {
 };
 
 export default function HomeScreen() {
+  const { t } = useAppLocale();
   const user = useAuth().user;
   const [now, setNow] = useState(() => new Date());
   const [prayerPlace, setPrayerPlace] = useState<string | null>(null);
@@ -95,6 +99,17 @@ export default function HomeScreen() {
     lastReadChapterId,
     lastReadVerseKey,
     readingStreak,
+    readingPlanEnabled,
+    readingPlanDurationDays,
+    readingPlanStartDate,
+    readingPlanCompletedDays,
+    startReadingPlan,
+    markReadingDayComplete,
+    setReadingPlanDuration,
+    readingStreakDate,
+    readingActivityDays,
+    milestonesUnlockedAt,
+    readingPlanHistory,
   } = useSettingsStore(
     useShallow((state) => ({
       translationId: state.translationId,
@@ -109,6 +124,17 @@ export default function HomeScreen() {
       lastReadChapterId: state.lastReadChapterId,
       lastReadVerseKey: state.lastReadVerseKey,
       readingStreak: state.readingStreak,
+      readingPlanEnabled: state.readingPlanEnabled,
+      readingPlanDurationDays: state.readingPlanDurationDays,
+      readingPlanStartDate: state.readingPlanStartDate,
+      readingPlanCompletedDays: state.readingPlanCompletedDays,
+      startReadingPlan: state.startReadingPlan,
+      markReadingDayComplete: state.markReadingDayComplete,
+      setReadingPlanDuration: state.setReadingPlanDuration,
+      readingStreakDate: state.readingStreakDate,
+      readingActivityDays: state.readingActivityDays,
+      milestonesUnlockedAt: state.milestonesUnlockedAt,
+      readingPlanHistory: state.readingPlanHistory,
     }))
   );
 
@@ -250,13 +276,58 @@ export default function HomeScreen() {
       { key: "qibla", label: "Qibla", icon: "compass-outline", onPress: () => router.push("/prayers") },
       { key: "bookmarks", label: "Bookmarks", icon: "bookmark-outline", onPress: () => router.push("/bookmarks") },
       { key: "downloads", label: "Downloads", icon: "download-outline", onPress: () => router.push("/settings/downloads") },
-      { key: "plan", label: "Reading plan", icon: "calendar-check-outline", onPress: () => router.push("/quran") },
+      { key: "plan", label: t("readingPlan.title"), icon: "calendar-check-outline", onPress: () => router.push("/settings/reading-plan") },
     ],
-    []
+    [t]
   );
 
   const greeting = greetingName(user?.displayName || user?.email?.split("@")[0]);
   const todayVerse = todayVerseQuery.data;
+  const planPercent = Math.min(
+    100,
+    Math.round((readingPlanCompletedDays / Math.max(1, readingPlanDurationDays)) * 100)
+  );
+  const planRemainingDays = Math.max(0, readingPlanDurationDays - readingPlanCompletedDays);
+  const expectedDateLabel = readingPlanStartDate
+    ? addDays(readingPlanStartDate, readingPlanDurationDays - 1)
+    : null;
+  const readingPlanPace = getReadingPlanPace({
+    enabled: readingPlanEnabled,
+    startDate: readingPlanStartDate,
+    completedDays: readingPlanCompletedDays,
+    durationDays: readingPlanDurationDays,
+    now,
+  });
+  const paceLabel =
+    readingPlanPace?.status === "ahead"
+      ? t("readingPlan.paceAhead", { count: readingPlanPace.deltaDays })
+      : readingPlanPace?.status === "behind"
+      ? t("readingPlan.paceBehind", { count: readingPlanPace.catchUpDays })
+      : readingPlanPace?.status === "onTrack"
+      ? t("readingPlan.paceOnTrack")
+      : null;
+  const todayTargetLabel = readingPlanPace
+    ? t("readingPlan.byToday", {
+        expected: readingPlanPace.expectedCompletedDays,
+        duration: readingPlanDurationDays,
+      })
+    : null;
+  const completedToday = readingStreakDate === toDayKey(now);
+  const weeklyReview = getReadingPlanWeeklyReview({
+    enabled: readingPlanEnabled,
+    activityDays: readingActivityDays,
+    now,
+    weeklyTargetDays: 7,
+  });
+  const unlockedMilestones = READING_MILESTONES.filter((m) => Boolean(milestonesUnlockedAt[m.id]));
+  const recentPlanHistory = readingPlanHistory.slice(0, 3);
+  const milestoneLabelById: Record<(typeof READING_MILESTONES)[number]["id"], string> = {
+    streak3: t("readingPlan.milestones.streak3"),
+    streak7: t("readingPlan.milestones.streak7"),
+    streak30: t("readingPlan.milestones.streak30"),
+    planFirstComplete: t("readingPlan.milestones.planFirstComplete"),
+    perfectWeek: t("readingPlan.milestones.perfectWeek"),
+  };
 
   return (
     <Screen className="pt-6">
@@ -426,15 +497,140 @@ export default function HomeScreen() {
 
           <SectionCard>
             <View className="flex-row items-center justify-between">
-              <Text className="font-uiSemibold text-base text-text">Reading plan</Text>
-              <StatusBadge label="Coming next" tone="accent" />
+              <Text className="font-uiSemibold text-base text-text">{t("readingPlan.title")}</Text>
+              <StatusBadge
+                label={readingPlanEnabled ? t("readingPlan.active") : t("readingPlan.inactive")}
+                tone={readingPlanEnabled ? "success" : "accent"}
+              />
             </View>
             <Text className="mt-2 font-ui text-sm leading-6 text-muted">
-              A guided plan for 30, 60, or 90 days will live here. For now, use Continue Reading to maintain daily continuity.
+              {readingPlanEnabled
+                ? t("readingPlan.progressLine", {
+                    completed: readingPlanCompletedDays,
+                    duration: readingPlanDurationDays,
+                    percent: planPercent,
+                    remaining: planRemainingDays,
+                  })
+                : t("readingPlan.startPrompt")}
             </Text>
-            <View className="mt-4">
-              <ActionButton label="Open Quran" variant="secondary" onPress={() => router.push("/quran")} />
+
+            {readingPlanEnabled && expectedDateLabel ? (
+              <Text className="mt-2 font-ui text-xs text-muted">{t("readingPlan.expectedFinish", { date: expectedDateLabel })}</Text>
+            ) : null}
+            {readingPlanEnabled && todayTargetLabel ? <Text className="mt-1 font-ui text-xs text-muted">{todayTargetLabel}</Text> : null}
+            {readingPlanEnabled && paceLabel ? (
+              <Text className="mt-1 font-ui text-xs text-muted">{t("readingPlan.paceLabel", { pace: paceLabel })}</Text>
+            ) : null}
+            {readingPlanPace?.status === "behind" ? (
+              <Text className="mt-1 font-ui text-xs text-muted">
+                {t("readingPlan.catchUpSuggestion", { count: readingPlanPace.catchUpDays })}
+              </Text>
+            ) : null}
+
+            <View className="mt-4 flex-row gap-3">
+              <ActionButton
+                label={t("readingPlan.durationLabel", { days: readingPlanDurationDays })}
+                variant="secondary"
+                className="flex-1"
+                onPress={() => {
+                  const nextDuration = readingPlanDurationDays === 30 ? 60 : readingPlanDurationDays === 60 ? 90 : 30;
+                  setReadingPlanDuration(nextDuration);
+                }}
+              />
+              <ActionButton
+                label={
+                  readingPlanEnabled
+                    ? completedToday
+                      ? t("readingPlan.completedToday")
+                      : t("readingPlan.markTodayComplete")
+                    : t("readingPlan.startPlan")
+                }
+                className="flex-1"
+                onPress={() => {
+                  if (readingPlanEnabled) {
+                    if (completedToday) return;
+                    markReadingDayComplete();
+                    return;
+                  }
+                  startReadingPlan({ durationDays: readingPlanDurationDays });
+                }}
+              />
             </View>
+
+            <View className="mt-3">
+              <ActionButton label={t("readingPlan.managePlan")} variant="secondary" onPress={() => router.push("/settings/reading-plan")} />
+            </View>
+          </SectionCard>
+
+          {readingPlanEnabled && weeklyReview ? (
+            <SectionCard>
+              <View className="flex-row items-center justify-between">
+                <Text className="font-uiSemibold text-base text-text">{t("readingPlan.weeklyReviewTitle")}</Text>
+                <StatusBadge label={`${weeklyReview.completedDaysThisWeek}/7`} tone="default" />
+              </View>
+              <Text className="mt-2 font-ui text-sm leading-6 text-muted">
+                {t("readingPlan.weeklyReviewSummary", {
+                  completed: weeklyReview.completedDaysThisWeek,
+                  missed: weeklyReview.missedDaysThisWeek,
+                })}
+              </Text>
+              <ReadingWeekStrip activityDays={readingActivityDays} now={now} />
+              <Text className="mt-1 font-ui text-xs text-muted">
+                {t("readingPlan.weeklyTargetPrefix", { days: weeklyReview.weeklyTargetDays })}
+                {weeklyReview.suggestedCatchUpDays > 0
+                  ? t("readingPlan.weeklyCatchUpSuffix", { count: weeklyReview.suggestedCatchUpDays })
+                  : t("readingPlan.weeklyOnTargetSuffix")}
+              </Text>
+            </SectionCard>
+          ) : null}
+
+          <SectionCard>
+            <View className="flex-row items-center justify-between">
+              <Text className="font-uiSemibold text-base text-text">{t("readingPlan.milestonesTitle")}</Text>
+              <StatusBadge label={`${unlockedMilestones.length}/${READING_MILESTONES.length}`} />
+            </View>
+            {unlockedMilestones.length > 0 ? (
+              <View className="mt-3 flex-row flex-wrap gap-2">
+                {unlockedMilestones.map((milestone) => (
+                  <View key={milestone.id} className="rounded-full border border-border bg-bg px-3 py-1.5">
+                    <Text className="font-ui text-xs text-text">{milestoneLabelById[milestone.id]}</Text>
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <Text className="mt-2 font-ui text-sm text-muted">
+                {t("readingPlan.milestonesEmpty")}
+              </Text>
+            )}
+          </SectionCard>
+
+          <SectionCard>
+            <View className="flex-row items-center justify-between">
+              <Text className="font-uiSemibold text-base text-text">{t("readingPlan.planHistoryTitle")}</Text>
+              <StatusBadge label={`${readingPlanHistory.length}`} tone="default" />
+            </View>
+            {recentPlanHistory.length > 0 ? (
+              <View className="mt-3 gap-2">
+                {recentPlanHistory.map((item) => (
+                  <View key={item.id} className="rounded-2xl border border-border bg-bg px-3 py-2">
+                    <Text className="font-uiMedium text-xs text-text">
+                      {t("readingPlan.planHistoryEntry", {
+                        completed: item.completedDays,
+                        duration: item.durationDays,
+                        status: item.completed ? t("readingPlan.statusCompleted") : t("readingPlan.statusRecorded"),
+                      })}
+                    </Text>
+                    <Text className="mt-0.5 font-ui text-xs text-muted">
+                      {item.startDate ?? "unknown"} {"->"} {item.endDate}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <Text className="mt-2 font-ui text-sm text-muted">
+                {t("readingPlan.planHistoryEmpty")}
+              </Text>
+            )}
           </SectionCard>
 
           <SectionCard>
