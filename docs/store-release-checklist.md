@@ -18,6 +18,7 @@ This repo is now configured with app branding assets, Android notification icon 
 
 - In **Expo Go**, notifications and launcher branding can still show Expo branding.
 - Your real app logo appears in a **development build**, **preview build**, or **production build** created with EAS.
+- This repo currently contains an `ios/` native project folder. Because of that, EAS Build will not automatically sync all values from `app.json` / `app.config.js` into iOS native files during cloud builds. Before shipping iOS changes to icons, splash, permissions, plugins, notifications, or URL schemes, sync and verify the native iOS project first.
 
 ## Required manual items before App Store / Play Store submission
 
@@ -38,6 +39,7 @@ This repo is now configured with app branding assets, Android notification icon 
 ### Google Play
 
 - Create an EAS production Android build / AAB.
+- If this is the first-ever Play upload for the app, create the Play Console app listing first and expect the first binary upload to be done in Play Console before API-based submissions are fully automated.
 - Verify launcher icon, adaptive icon, notification icon, and notification color on a physical Android device.
 - Fill Play Console metadata:
   - short description
