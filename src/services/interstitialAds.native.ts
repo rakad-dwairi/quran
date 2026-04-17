@@ -6,8 +6,8 @@ type InterstitialAdInstance = ReturnType<
   GoogleMobileAdsModule["InterstitialAd"]["createForAdRequest"]
 >;
 
-const ACTIONS_BETWEEN_SHOWS = 3;
-const MIN_TIME_BETWEEN_SHOWS_MS = 4 * 60 * 1000;
+const ACTIONS_BETWEEN_SHOWS = __DEV__ ? 1 : 2;
+const MIN_TIME_BETWEEN_SHOWS_MS = __DEV__ ? 15 * 1000 : 90 * 1000;
 const LOAD_TIMEOUT_MS = 8000;
 const SHOW_TIMEOUT_MS = 30000;
 
@@ -108,7 +108,10 @@ export async function showInterstitialAdIfAvailable() {
 
   const loaded = await preloadInterstitialAd();
   const ad = interstitialAd;
-  if (!loaded || !ad?.loaded) return false;
+  if (!loaded || !ad?.loaded) {
+    void preloadInterstitialAd();
+    return false;
+  }
 
   const module = await getAdMobModule();
   if (!module) return false;
@@ -133,10 +136,16 @@ export async function showInterstitialAdIfAvailable() {
       settle(true);
     });
     const unsubscribeError = ad.addAdEventListener(module.AdEventType.ERROR, () => {
+      if (interstitialAd === ad) interstitialAd = null;
+      void preloadInterstitialAd();
       settle(false);
     });
     const timeout = setTimeout(() => settle(false), SHOW_TIMEOUT_MS);
 
-    ad.show().catch(() => settle(false));
+    ad.show().catch(() => {
+      if (interstitialAd === ad) interstitialAd = null;
+      void preloadInterstitialAd();
+      settle(false);
+    });
   });
 }

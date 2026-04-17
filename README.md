@@ -67,6 +67,8 @@ EXPO_PUBLIC_FACEBOOK_APP_ID=...
 EXPO_PUBLIC_FACEBOOK_CLIENT_TOKEN=...
 ```
 
+For Android Google sign-in, also add your app's SHA-1 and SHA-256 fingerprints to the Firebase Android app for package `com.rakad.quran`. Without that, Google sign-in fails with `DEVELOPER_ERROR`.
+
 Then rebuild the native app:
 
 ```bash

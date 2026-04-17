@@ -9,7 +9,7 @@ import {
   type SocialAuthProvider,
 } from "@/services/socialAuth";
 import { colors } from "@/theme/colors";
-import { friendlyFirebaseAuthError } from "@/utils/firebaseAuthErrors";
+import { getFriendlySocialAuthError } from "@/utils/socialAuthErrors";
 
 type SocialAuthButtonsProps = {
   busy: boolean;
@@ -63,7 +63,7 @@ export function SocialAuthButtons({ busy, onBusyChange }: SocialAuthButtonsProps
       await provider.signIn();
     } catch (error) {
       if (!isSocialSignInCancelled(error)) {
-        Alert.alert("Sign in failed", friendlyFirebaseAuthError(error));
+        Alert.alert("Sign in failed", await getFriendlySocialAuthError(error, provider.id));
       }
     } finally {
       onBusyChange(false);
