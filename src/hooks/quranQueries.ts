@@ -66,17 +66,19 @@ export function useVerseByKeyQuery({
   recitationId,
   language = "en",
   includeTransliteration = false,
+  enabled,
 }: {
   verseKey: string;
   translationId?: number | null;
   recitationId?: number;
   language?: string;
   includeTransliteration?: boolean;
+  enabled?: boolean;
 }) {
   return useQuery({
     queryKey: ["verseByKey", verseKey, translationId, recitationId, language, includeTransliteration],
     queryFn: () => getVerseByKey(verseKey, { translationId, recitationId, language, includeTransliteration }),
-    enabled: !!verseKey,
+    enabled: enabled ?? !!verseKey,
   });
 }
 

@@ -8,9 +8,17 @@ import { SectionCard } from "@/components/SectionCard";
 import { listDownloads, removeDownload, type OfflineDownloadItem } from "@/services/offlineContent";
 import { useChaptersQuery, useRecitationsQuery, useTranslationsQuery } from "@/hooks/quranQueries";
 
-function estimateSizeLabel(items: OfflineDownloadItem[]) {
-  const estimatedMb = items.length * 4;
-  return `${estimatedMb} MB estimated`;
+function formatBytes(bytes: number | undefined) {
+  if (!bytes) return "Size unavailable";
+  const mb = bytes / 1024 / 1024;
+  if (mb >= 1) return `${mb.toFixed(mb >= 10 ? 0 : 1)} MB`;
+  const kb = bytes / 1024;
+  return `${Math.max(1, Math.round(kb))} KB`;
+}
+
+function totalSizeLabel(items: OfflineDownloadItem[]) {
+  const total = items.reduce((sum, item) => sum + (item.sizeBytes ?? 0), 0);
+  return total ? formatBytes(total) : "Size unavailable";
 }
 
 export default function DownloadsScreen() {
@@ -63,7 +71,7 @@ export default function DownloadsScreen() {
           <View className="flex-1 pr-4">
             <Text className="font-uiSemibold text-base text-text">Offline library</Text>
             <Text className="mt-1 font-ui text-sm text-muted">
-              {items ? `${items.length} items · ${estimateSizeLabel(items)}` : "Refreshing offline items..."}
+              {items ? `${items.length} items · ${totalSizeLabel(items)}` : "Refreshing offline items..."}
             </Text>
           </View>
           <Pressable className="rounded-2xl bg-bg px-4 py-2 active:opacity-80" onPress={() => refresh()}>
@@ -114,7 +122,7 @@ export default function DownloadsScreen() {
                       {item.chapterId}. {chapterName}
                     </Text>
                     <Text className="mt-2 font-ui text-sm leading-6 text-muted">{translationName} · {reciterName}</Text>
-                    <Text className="mt-1 font-ui text-xs text-muted">{contentLabel}</Text>
+                    <Text className="mt-1 font-ui text-xs text-muted">{contentLabel} · {formatBytes(item.sizeBytes)}</Text>
                   </View>
 
                   <Pressable

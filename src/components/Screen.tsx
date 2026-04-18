@@ -1,6 +1,6 @@
 import type { PropsWithChildren } from "react";
 import type { ViewProps } from "react-native";
-import { View } from "react-native";
+import { KeyboardAvoidingView, Platform, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AdBanner } from "@/components/AdBanner";
 
@@ -22,13 +22,18 @@ export function Screen({
   const insets = useSafeAreaInsets();
 
   return (
-    <View
-      {...props}
-      style={[{ paddingTop: insets.top }, style]}
-      className={`flex-1 bg-bg ${className ?? ""}`}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={0}
+      style={[{ flex: 1, paddingTop: insets.top }, style]}
     >
-      <View className={`flex-1 ${padded ? "px-6" : ""}`}>{children}</View>
+      <View
+        {...props}
+        className={`flex-1 bg-bg ${className ?? ""}`}
+      >
+        <View className={`flex-1 ${padded ? "px-6" : ""}`}>{children}</View>
+      </View>
       {showAd ? <AdBanner /> : null}
-    </View>
+    </KeyboardAvoidingView>
   );
 }

@@ -85,6 +85,7 @@ export default function SurahScreen() {
   const highlightKey = typeof verseKey === "string" ? verseKey : undefined;
   const [highlightedVerseKey, setHighlightedVerseKey] = useState<string | undefined>(highlightKey);
   const [actionsVerse, setActionsVerse] = useState<Verse | null>(null);
+  const [currentVerseKey, setCurrentVerseKey] = useState<string | null>(highlightKey ?? null);
 
   useEffect(() => {
     setHighlightedVerseKey(highlightKey);
@@ -142,6 +143,7 @@ export default function SurahScreen() {
     if (!nextVerseKey) return;
     if (lastRecordedVerseKeyRef.current === nextVerseKey) return;
     lastRecordedVerseKeyRef.current = nextVerseKey;
+    setCurrentVerseKey(nextVerseKey);
     recordReadingProgress({ chapterId, verseKey: nextVerseKey });
   }
 
@@ -221,6 +223,13 @@ export default function SurahScreen() {
         </View>
       ) : (
         <View className="flex-1">
+          {currentVerseKey ? (
+            <View className="mb-3 flex-row items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3">
+              <Text className="font-uiMedium text-xs text-muted">Current position</Text>
+              <Text className="font-uiSemibold text-xs text-primary">{currentVerseKey}</Text>
+            </View>
+          ) : null}
+
           {verseLayout === "mushaf" ? (
             <FlatList
               ref={pageListRef}
@@ -289,19 +298,22 @@ export default function SurahScreen() {
                   arabicFontSize={arabicFontSize}
                   translationFontSize={translationFontSize}
                   highlighted={item.verse_key === highlightedVerseKey}
+                  onOpenActions={(v) => setActionsVerse(v)}
                 />
               )}
             />
           )}
 
           <VerseActionsSheet
-            open={verseLayout === "mushaf" && !!actionsVerse}
+            open={!!actionsVerse}
             verse={actionsVerse}
             onClose={() => setActionsVerse(null)}
             showTranslation={showTranslation}
             showTransliteration={showTransliteration}
             arabicFontSize={arabicFontSize}
             translationFontSize={translationFontSize}
+            verses={verses}
+            chapterTitle={chapter?.name_simple ? chapter.name_simple : t("surah.titleFallback", { chapterId })}
           />
         </View>
       )}

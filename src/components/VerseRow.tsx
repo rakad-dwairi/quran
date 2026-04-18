@@ -13,6 +13,7 @@ export function VerseRow({
   arabicFontSize,
   translationFontSize,
   highlighted,
+  onOpenActions,
 }: {
   verse: Verse;
   showTranslation: boolean;
@@ -20,6 +21,7 @@ export function VerseRow({
   arabicFontSize: number;
   translationFontSize: number;
   highlighted?: boolean;
+  onOpenActions?: (verse: Verse) => void;
 }) {
   const { t, isRTL } = useAppLocale();
   const translation = verse.translations?.[0]?.textPlain;
@@ -27,6 +29,7 @@ export function VerseRow({
   const verseKey = verse.verse_key;
   const bookmarked = useLibraryStore((s) => !!s.bookmarks[verseKey]);
   const favorited = useLibraryStore((s) => !!s.favorites[verseKey]);
+  const hasNote = useLibraryStore((s) => !!s.notes[verseKey]);
   const toggleBookmark = useLibraryStore((s) => s.toggleBookmark);
   const toggleFavorite = useLibraryStore((s) => s.toggleFavorite);
 
@@ -72,8 +75,19 @@ export function VerseRow({
       ) : null}
 
       <View className="mt-4 flex-row items-center justify-between">
-        <Text className="font-ui text-xs text-muted">{verseKey}</Text>
         <View className="flex-row items-center">
+          <Text className="font-ui text-xs text-muted">{verseKey}</Text>
+          {hasNote ? <Text className="ml-2 font-uiMedium text-xs text-primary">Note</Text> : null}
+        </View>
+        <View className="flex-row items-center">
+          {onOpenActions ? (
+            <IconButton
+              name="dots-horizontal"
+              accessibilityLabel={t("surah.chooseVerseAction")}
+              onPress={() => onOpenActions(verse)}
+              color={colors.muted}
+            />
+          ) : null}
           <IconButton
             name="book-open-page-variant"
             accessibilityLabel={t("surah.openTafsir")}

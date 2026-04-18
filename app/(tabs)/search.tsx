@@ -28,6 +28,7 @@ function parseVerseKey(input: string): string | null {
 export default function SearchScreen() {
   const { appLanguage, t, textAlign, isRTL } = useAppLocale();
   const [query, setQuery] = useState("");
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const debounced = useDebouncedValue(query, 350);
   const trimmed = debounced.trim();
 
@@ -47,6 +48,16 @@ export default function SearchScreen() {
   });
 
   const results = useMemo<SearchResult[]>(() => searchQuery.data?.results ?? [], [searchQuery.data]);
+  const quickJumps = useMemo(
+    () => [
+      { label: "Al-Fatihah", verseKey: "1:1" },
+      { label: "Ayat al-Kursi", verseKey: "2:255" },
+      { label: "Al-Kahf", verseKey: "18:1" },
+      { label: "Ya-Sin", verseKey: "36:1" },
+      { label: "Al-Mulk", verseKey: "67:1" },
+    ],
+    []
+  );
   const surahMatches = useMemo(() => {
     if (!trimmed) return [];
     const list = chaptersQuery.data ?? [];
@@ -55,6 +66,17 @@ export default function SearchScreen() {
       .filter((c) => c.name_simple.toLowerCase().includes(lower) || c.name_arabic.includes(trimmed))
       .slice(0, 5);
   }, [chaptersQuery.data, trimmed]);
+
+  function rememberSearch(value: string) {
+    const next = value.trim();
+    if (!next) return;
+    setRecentSearches((current) => [next, ...current.filter((item) => item !== next)].slice(0, 5));
+  }
+
+  function openVerseKey(key: string) {
+    const chapter = Number(key.split(":")[0]);
+    router.push({ pathname: `/surah/${chapter}`, params: { verseKey: key } });
+  }
 
   return (
     <Screen className="pt-6">
@@ -75,19 +97,53 @@ export default function SearchScreen() {
         returnKeyType="search"
         style={{ textAlign, writingDirection: isRTL ? "rtl" : "ltr" }}
         onSubmitEditing={() => {
+          rememberSearch(query);
           const key = parseVerseKey(query);
           if (!key) return;
-          const chapter = Number(key.split(":")[0]);
-          router.push({ pathname: `/surah/${chapter}`, params: { verseKey: key } });
+          openVerseKey(key);
         }}
         className="rounded-2xl border border-border bg-surface px-4 py-3 font-ui text-base text-text"
       />
 
       {trimmed.length === 0 ? (
-        <View className="mt-6 rounded-2xl border border-border bg-surface px-4 py-4">
-          <Text className="font-uiSemibold text-base text-text" style={{ textAlign }}>{t("search.tipsTitle")}</Text>
-          <Text className="mt-2 font-ui text-muted" style={{ textAlign }}>{t("search.tipsBody")}</Text>
-        </View>
+        <>
+          <View className="mt-6 rounded-2xl border border-border bg-surface px-4 py-4">
+            <Text className="font-uiSemibold text-base text-text" style={{ textAlign }}>{t("search.tipsTitle")}</Text>
+            <Text className="mt-2 font-ui text-muted" style={{ textAlign }}>{t("search.tipsBody")}</Text>
+          </View>
+
+          <View className="mt-4 rounded-2xl border border-border bg-surface px-4 py-4">
+            <Text className="font-uiSemibold text-base text-text" style={{ textAlign }}>Quick jumps</Text>
+            <View className="mt-3 flex-row flex-wrap gap-2">
+              {quickJumps.map((item) => (
+                <Pressable
+                  key={item.verseKey}
+                  className="rounded-full bg-bg px-4 py-2 active:opacity-80"
+                  onPress={() => openVerseKey(item.verseKey)}
+                >
+                  <Text className="font-uiMedium text-xs text-text">{item.label}</Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+
+          {recentSearches.length ? (
+            <View className="mt-4 rounded-2xl border border-border bg-surface px-4 py-4">
+              <Text className="font-uiSemibold text-base text-text" style={{ textAlign }}>Recent searches</Text>
+              <View className="mt-3 gap-2">
+                {recentSearches.map((item) => (
+                  <Pressable
+                    key={item}
+                    className="rounded-2xl bg-bg px-4 py-3 active:opacity-80"
+                    onPress={() => setQuery(item)}
+                  >
+                    <Text className="font-uiMedium text-sm text-text">{item}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+          ) : null}
+        </>
       ) : (
         <>
           {surahMatches.length ? (
@@ -146,9 +202,10 @@ export default function SearchScreen() {
                 return (
                   <Pressable
                     className="active:opacity-80"
-                    onPress={() =>
-                      router.push({ pathname: `/surah/${chapter}`, params: { verseKey: item.verse_key } })
-                    }
+                    onPress={() => {
+                      rememberSearch(query);
+                      router.push({ pathname: `/surah/${chapter}`, params: { verseKey: item.verse_key } });
+                    }}
                   >
                     <SearchResultItem result={item} />
                   </Pressable>

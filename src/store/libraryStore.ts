@@ -9,21 +9,39 @@ export type LibraryVerse = {
   arabicText: string;
   translationText?: string;
   createdAt: number;
+  updatedAt?: number;
+  note?: string;
+  tags?: string[];
 };
 
 type LibraryState = {
   bookmarks: Record<string, LibraryVerse>;
   favorites: Record<string, LibraryVerse>;
+  notes: Record<string, LibraryVerse>;
 };
 
 type LibraryActions = {
   toggleBookmark: (verse: LibraryVerse) => void;
   toggleFavorite: (verse: LibraryVerse) => void;
+  saveNote: (verse: LibraryVerse, note: string, tags?: string[]) => void;
+  removeNote: (verseKey: string) => void;
   removeBookmark: (verseKey: string) => void;
   removeFavorite: (verseKey: string) => void;
-  mergeFromCloud: (payload: { bookmarks?: Record<string, LibraryVerse>; favorites?: Record<string, LibraryVerse> }) => void;
-  getSnapshot: () => { bookmarks: Record<string, LibraryVerse>; favorites: Record<string, LibraryVerse> };
-  replaceAll: (payload: { bookmarks: Record<string, LibraryVerse>; favorites: Record<string, LibraryVerse> }) => void;
+  mergeFromCloud: (payload: {
+    bookmarks?: Record<string, LibraryVerse>;
+    favorites?: Record<string, LibraryVerse>;
+    notes?: Record<string, LibraryVerse>;
+  }) => void;
+  getSnapshot: () => {
+    bookmarks: Record<string, LibraryVerse>;
+    favorites: Record<string, LibraryVerse>;
+    notes: Record<string, LibraryVerse>;
+  };
+  replaceAll: (payload: {
+    bookmarks: Record<string, LibraryVerse>;
+    favorites: Record<string, LibraryVerse>;
+    notes?: Record<string, LibraryVerse>;
+  }) => void;
 };
 
 function mergeRecords(
@@ -33,9 +51,23 @@ function mergeRecords(
   const out: Record<string, LibraryVerse> = { ...local };
   for (const [key, remoteVerse] of Object.entries(remote)) {
     const localVerse = out[key];
-    if (!localVerse || remoteVerse.createdAt > localVerse.createdAt) {
+    const remoteTime = remoteVerse.updatedAt ?? remoteVerse.createdAt;
+    const localTime = localVerse ? localVerse.updatedAt ?? localVerse.createdAt : 0;
+    if (!localVerse || remoteTime > localTime) {
       out[key] = remoteVerse;
     }
+  }
+  return out;
+}
+
+function normalizeTags(tags: string[] | undefined): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const tag of tags ?? []) {
+    const next = tag.trim().replace(/^#/, "").toLowerCase();
+    if (!next || seen.has(next)) continue;
+    seen.add(next);
+    out.push(next);
   }
   return out;
 }
@@ -45,6 +77,7 @@ export const useLibraryStore = create<LibraryState & LibraryActions>()(
     (set, get) => ({
       bookmarks: {},
       favorites: {},
+      notes: {},
 
       toggleBookmark: (verse) =>
         set((state) => {
@@ -68,6 +101,30 @@ export const useLibraryStore = create<LibraryState & LibraryActions>()(
           return { favorites: next };
         }),
 
+      saveNote: (verse, note, tags) =>
+        set((state) => {
+          const trimmedNote = note.trim();
+          const next = { ...state.notes };
+          if (!trimmedNote) {
+            delete next[verse.verseKey];
+            return { notes: next };
+          }
+          next[verse.verseKey] = {
+            ...verse,
+            note: trimmedNote,
+            tags: normalizeTags(tags),
+            updatedAt: Date.now(),
+          };
+          return { notes: next };
+        }),
+
+      removeNote: (verseKey) =>
+        set((state) => {
+          const next = { ...state.notes };
+          delete next[verseKey];
+          return { notes: next };
+        }),
+
       removeBookmark: (verseKey) =>
         set((state) => {
           const next = { ...state.bookmarks };
@@ -86,20 +143,31 @@ export const useLibraryStore = create<LibraryState & LibraryActions>()(
         set((state) => ({
           bookmarks: payload.bookmarks ? mergeRecords(state.bookmarks, payload.bookmarks) : state.bookmarks,
           favorites: payload.favorites ? mergeRecords(state.favorites, payload.favorites) : state.favorites,
+          notes: payload.notes ? mergeRecords(state.notes, payload.notes) : state.notes,
         })),
 
       getSnapshot: () => {
         const state = get();
-        return { bookmarks: state.bookmarks, favorites: state.favorites };
+        return { bookmarks: state.bookmarks, favorites: state.favorites, notes: state.notes };
       },
 
-      replaceAll: (payload) => set({ bookmarks: payload.bookmarks, favorites: payload.favorites }),
+      replaceAll: (payload) =>
+        set({
+          bookmarks: payload.bookmarks,
+          favorites: payload.favorites,
+          notes: payload.notes ?? {},
+        }),
     }),
     {
       name: "library-v1",
       storage: createJSONStorage(() => AsyncStorage),
-      version: 1,
+      version: 2,
+      migrate: (persisted) => ({
+        bookmarks: {},
+        favorites: {},
+        notes: {},
+        ...(persisted as Partial<LibraryState>),
+      }),
     }
   )
 );
-

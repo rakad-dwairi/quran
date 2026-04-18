@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import type { ReactNode } from "react";
-import { Text, View } from "react-native";
+import { Image, Text, View } from "react-native";
 import { IconButton } from "@/components/IconButton";
 import { useAppLocale } from "@/i18n/useAppLocale";
 import { colors } from "@/theme/colors";
@@ -30,11 +30,25 @@ export function AppHeader({
               color={colors.text}
               className={isRTL ? "-mr-2" : "-ml-2"}
             />
-          ) : null}
+          ) : (
+            <View
+              className="h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border border-border bg-surface"
+              style={{ marginEnd: 12 }}
+            >
+              <Image
+                source={require("../../assets/logo-mark.png")}
+                className="h-12 w-12"
+                resizeMode="cover"
+              />
+            </View>
+          )}
           <View className="min-w-0 flex-1">
-            <Text className="font-uiSemibold text-[28px] text-text" style={{ textAlign }}>
-              {title}
-            </Text>
+            <View className="items-center" style={{ flexDirection: rowDirection }}>
+              <Text className="font-uiSemibold text-[28px] text-text" style={{ textAlign }}>
+                {title}
+              </Text>
+              {!showBack ? <Text className="ml-2 font-uiSemibold text-lg text-accent">✦</Text> : null}
+            </View>
             {subtitle ? (
               <Text className="mt-1 font-ui text-sm leading-6 text-muted" style={{ textAlign }}>
                 {subtitle}

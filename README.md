@@ -2,6 +2,8 @@
 
 Cross-platform Quran app (Android/iOS via Expo development builds, plus web) built with **React Native + Expo Router + TypeScript**.
 
+This application was built for the sake of my gone father, Dr. Issam Aldwairi.
+
 ## What's included
 
 - **Quran reading**: Surah list + reading view (Arabic Uthmani + translation)

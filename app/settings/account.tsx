@@ -72,26 +72,29 @@ export default function AccountScreen() {
       const remote = (snap.exists() ? snap.data() : {}) as {
         bookmarks?: Record<string, LibraryVerse>;
         favorites?: Record<string, LibraryVerse>;
+        notes?: Record<string, LibraryVerse>;
       };
 
       const local = useLibraryStore.getState().getSnapshot();
       const mergedBookmarks = mergeVerseMap(local.bookmarks, remote.bookmarks ?? {});
       const mergedFavorites = mergeVerseMap(local.favorites, remote.favorites ?? {});
+      const mergedNotes = mergeVerseMap(local.notes, remote.notes ?? {});
 
-      useLibraryStore.getState().replaceAll({ bookmarks: mergedBookmarks, favorites: mergedFavorites });
+      useLibraryStore.getState().replaceAll({ bookmarks: mergedBookmarks, favorites: mergedFavorites, notes: mergedNotes });
 
       await setDoc(
         ref,
         {
           bookmarks: mergedBookmarks,
           favorites: mergedFavorites,
+          notes: mergedNotes,
           updatedAt: serverTimestamp(),
         },
         { merge: true }
       );
 
       setLastSyncedAt(Date.now());
-      Alert.alert("Synced", "Your bookmarks and favorites are up to date.");
+      Alert.alert("Synced", "Your bookmarks, favorites, and notes are up to date.");
     } catch (e) {
       Alert.alert("Sync failed", e instanceof Error ? e.message : "Please try again.");
     } finally {
@@ -125,7 +128,7 @@ export default function AccountScreen() {
 
           <SectionCard compact>
             <Text className="font-ui text-sm leading-6 text-muted">
-              Cloud Sync keeps bookmarks and favorites aligned across devices signed into the same account.
+              Cloud Sync keeps bookmarks, favorites, and notes aligned across devices signed into the same account.
             </Text>
             <View className="mt-4 gap-3">
               <Pressable className="rounded-2xl bg-primary px-5 py-3 active:opacity-80" onPress={() => syncNow()} disabled={busy}>

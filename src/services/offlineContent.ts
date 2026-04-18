@@ -22,6 +22,7 @@ export type OfflineDownloadItem = {
   recitationId: number;
   textPath?: string;
   audioPath?: string;
+  sizeBytes?: number;
   createdAt: number;
   updatedAt: number;
 };
@@ -161,7 +162,24 @@ export async function downloadSurahBundle(opts: {
 
 export async function listDownloads(): Promise<OfflineDownloadItem[]> {
   const manifest = await readManifest();
-  return manifest.items;
+  return Promise.all(
+    manifest.items.map(async (item) => ({
+      ...item,
+      sizeBytes: await getDownloadSizeBytes(item),
+    }))
+  );
+}
+
+async function getFileSize(path: string | undefined): Promise<number> {
+  if (!path) return 0;
+  const info = await FileSystem.getInfoAsync(path).catch(() => null);
+  if (!info?.exists || !("size" in info) || typeof info.size !== "number") return 0;
+  return info.size;
+}
+
+export async function getDownloadSizeBytes(item: OfflineDownloadItem): Promise<number> {
+  const [textSize, audioSize] = await Promise.all([getFileSize(item.textPath), getFileSize(item.audioPath)]);
+  return textSize + audioSize;
 }
 
 export async function removeDownload(opts: {
