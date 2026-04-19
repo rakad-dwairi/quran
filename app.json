@@ -32,7 +32,7 @@
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Your location is used to calculate accurate prayer times, Qibla direction, and nearby Islamic features."
       },
-      "supportsTablet": true,
+      "supportsTablet": false,
       "buildNumber": "1"
     },
     "android": {

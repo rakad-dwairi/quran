@@ -276,6 +276,7 @@ export default function HomeScreen() {
       { key: "tasbih", label: t("home.tasbih"), icon: "counter", onPress: () => router.push("/tasbih") },
       { key: "qibla", label: t("home.qibla"), icon: "compass-outline", onPress: () => router.push("/prayers") },
       { key: "bookmarks", label: t("home.bookmarks"), icon: "bookmark-outline", onPress: () => router.push("/bookmarks") },
+      { key: "memorization", label: "Memorize", icon: "brain", onPress: () => router.push("/memorization") },
       { key: "downloads", label: t("settings.downloads"), icon: "download-outline", onPress: () => router.push("/settings/downloads") },
       { key: "plan", label: t("readingPlan.title"), icon: "calendar-check-outline", onPress: () => router.push("/settings/reading-plan") },
     ],

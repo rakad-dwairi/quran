@@ -23,6 +23,7 @@ import {
   READING_MILESTONES,
   toDayKey,
 } from "@/utils/readingPlan";
+import { confirmNotificationPermission } from "@/utils/permissionPrompts";
 
 const MINUTES = [0, 30] as const;
 const TIME_OPTIONS = Array.from({ length: 24 }).flatMap((_, hour) => MINUTES.map((minute) => ({ hour, minute })));
@@ -36,6 +37,8 @@ function formatTime(hour: number, minute: number) {
 async function ensurePermission() {
   const current = await Notifications.getPermissionsAsync();
   if (current.status === "granted") return true;
+  const shouldAsk = await confirmNotificationPermission();
+  if (!shouldAsk) return false;
   const req = await Notifications.requestPermissionsAsync();
   return req.status === "granted";
 }

@@ -1,4 +1,4 @@
-import { Stack, useLocalSearchParams } from "expo-router";
+import { Stack, router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ViewToken } from "react-native";
 import { ActivityIndicator, FlatList, Pressable, Text, View } from "react-native";
@@ -32,6 +32,9 @@ export default function SurahScreen() {
     arabicFontSize,
     translationFontSize,
     verseLayout,
+    setShowTranslation,
+    setShowTransliteration,
+    setVerseLayout,
     recordReadingProgress,
   } = useSettingsStore(
     useShallow((state) => ({
@@ -43,6 +46,9 @@ export default function SurahScreen() {
       arabicFontSize: state.arabicFontSize,
       translationFontSize: state.translationFontSize,
       verseLayout: state.verseLayout,
+      setShowTranslation: state.setShowTranslation,
+      setShowTransliteration: state.setShowTransliteration,
+      setVerseLayout: state.setVerseLayout,
       recordReadingProgress: state.recordReadingProgress,
     }))
   );
@@ -207,6 +213,39 @@ export default function SurahScreen() {
       />
 
       <View className="h-4" />
+
+      <View className="mb-3 flex-row flex-wrap gap-2 rounded-2xl border border-border bg-surface px-3 py-3">
+        <Pressable
+          className={`rounded-full px-3 py-2 active:opacity-80 ${verseLayout === "cards" ? "bg-primary" : "bg-bg"}`}
+          onPress={() => setVerseLayout(verseLayout === "cards" ? "mushaf" : "cards")}
+        >
+          <Text className={`font-uiMedium text-xs ${verseLayout === "cards" ? "text-primaryForeground" : "text-text"}`}>
+            {verseLayout === "cards" ? "Cards" : "Mushaf"}
+          </Text>
+        </Pressable>
+        <Pressable
+          className={`rounded-full px-3 py-2 active:opacity-80 ${showTranslation ? "bg-primary" : "bg-bg"}`}
+          onPress={() => setShowTranslation(!showTranslation)}
+        >
+          <Text className={`font-uiMedium text-xs ${showTranslation ? "text-primaryForeground" : "text-text"}`}>
+            Translation
+          </Text>
+        </Pressable>
+        <Pressable
+          className={`rounded-full px-3 py-2 active:opacity-80 ${showTransliteration ? "bg-primary" : "bg-bg"}`}
+          onPress={() => setShowTransliteration(!showTransliteration)}
+        >
+          <Text className={`font-uiMedium text-xs ${showTransliteration ? "text-primaryForeground" : "text-text"}`}>
+            Transliteration
+          </Text>
+        </Pressable>
+        <Pressable
+          className="rounded-full bg-bg px-3 py-2 active:opacity-80"
+          onPress={() => router.push("/search")}
+        >
+          <Text className="font-uiMedium text-xs text-text">Search</Text>
+        </Pressable>
+      </View>
 
       {versesQuery.isLoading ? (
         <View className="flex-1 items-center justify-center py-10">

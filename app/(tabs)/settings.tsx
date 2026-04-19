@@ -48,11 +48,13 @@ export default function SettingsScreen() {
     arabicFontSize,
     translationFontSize,
     verseLayout,
+    theme,
     setShowTranslation,
     setShowTransliteration,
     bumpArabicFontSize,
     bumpTranslationFontSize,
     setVerseLayout,
+    setTheme,
   } = useSettingsStore(
     useShallow((state) => ({
       quranTranslationLanguage: state.quranTranslationLanguage,
@@ -62,11 +64,13 @@ export default function SettingsScreen() {
       arabicFontSize: state.arabicFontSize,
       translationFontSize: state.translationFontSize,
       verseLayout: state.verseLayout,
+      theme: state.theme,
       setShowTranslation: state.setShowTranslation,
       setShowTransliteration: state.setShowTransliteration,
       bumpArabicFontSize: state.bumpArabicFontSize,
       bumpTranslationFontSize: state.bumpTranslationFontSize,
       setVerseLayout: state.setVerseLayout,
+      setTheme: state.setTheme,
     }))
   );
   const { t, textAlign, rowDirection } = useAppLocale();
@@ -92,6 +96,24 @@ export default function SettingsScreen() {
 
         <View className="mt-4 rounded-2xl border border-border bg-surface p-4">
           <Text className="font-uiSemibold text-base text-text" style={{ textAlign }}>{t("settings.quranDisplay")}</Text>
+
+          <View className="mt-4">
+            <Text className="font-uiMedium text-sm text-text" style={{ textAlign }}>Theme</Text>
+            <Text className="mt-1 font-ui text-sm text-muted" style={{ textAlign }}>Choose a calmer reading atmosphere.</Text>
+            <View className="mt-3 rounded-2xl border border-border bg-bg p-1" style={{ flexDirection: rowDirection }}>
+              {(["light", "sepia", "dark"] as const).map((mode) => (
+                <Pressable
+                  key={mode}
+                  className={`flex-1 rounded-xl px-3 py-2 ${theme === mode ? "bg-primary" : "bg-transparent"}`}
+                  onPress={() => setTheme(mode)}
+                >
+                  <Text className={`text-center font-uiSemibold capitalize ${theme === mode ? "text-primaryForeground" : "text-text"}`}>
+                    {mode}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
 
           <SettingsLink
             title={t("settings.translationLanguage")}
@@ -204,6 +226,9 @@ export default function SettingsScreen() {
         <View className="mt-4 rounded-2xl border border-border bg-surface p-4">
           <Text className="font-uiSemibold text-base text-text" style={{ textAlign }}>{t("settings.cloud")}</Text>
           <SettingsLink title={t("settings.cloudSync")} subtitle={t("settings.cloudSubtitle")} href="/settings/account" />
+          <SettingsLink title="Privacy & Data" subtitle="Export, clear, and understand how data is used." href="/settings/privacy" />
+          <SettingsLink title="Terms & Disclaimers" subtitle="Quran content, AI summaries, prayer calculations, and ads." href="/settings/terms" />
+          <SettingsLink title="About & Support" subtitle="Version, support email, credits, and policy links." href="/settings/about" />
         </View>
       </ScrollView>
     </Screen>

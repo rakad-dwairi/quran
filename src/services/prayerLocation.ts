@@ -1,6 +1,7 @@
 import * as Location from "expo-location";
 import type { PrayerLocationMode } from "@/constants/prayer";
 import type { PrayerCoordinates } from "@/services/prayerTimes";
+import { confirmLocationPermission } from "@/utils/permissionPrompts";
 
 export type PrayerLocationResult = {
   coords: PrayerCoordinates;
@@ -28,9 +29,14 @@ export async function getAutoPrayerLocation({ requestPermission }: { requestPerm
     throw new Error("Location services are disabled. Enable them and try again.");
   }
 
-  const permission = requestPermission
-    ? await Location.requestForegroundPermissionsAsync()
-    : await Location.getForegroundPermissionsAsync();
+  let permission = await Location.getForegroundPermissionsAsync();
+  if (requestPermission && permission.status !== "granted") {
+    const shouldAsk = await confirmLocationPermission();
+    if (!shouldAsk) {
+      throw new Error("Location permission was not requested. You can use manual location instead.");
+    }
+    permission = await Location.requestForegroundPermissionsAsync();
+  }
 
   if (permission.status !== "granted") {
     throw new Error("Location permission is needed for automatic prayer times.");

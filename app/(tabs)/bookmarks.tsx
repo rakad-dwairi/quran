@@ -13,14 +13,19 @@ import { colors } from "@/theme/colors";
 export default function BookmarksScreen() {
   const chaptersQuery = useChaptersQuery({ language: "en" });
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<"all" | "bookmark" | "favorite" | "note">("all");
+  const [filter, setFilter] = useState<"all" | "bookmark" | "favorite" | "note" | "memorized" | "collection">("all");
 
   const bookmarksMap = useLibraryStore((s) => s.bookmarks);
   const favoritesMap = useLibraryStore((s) => s.favorites);
   const notesMap = useLibraryStore((s) => s.notes);
+  const memorizedMap = useLibraryStore((s) => s.memorized);
+  const collectionsMap = useLibraryStore((s) => s.collections);
   const removeBookmark = useLibraryStore((s) => s.removeBookmark);
   const removeFavorite = useLibraryStore((s) => s.removeFavorite);
   const removeNote = useLibraryStore((s) => s.removeNote);
+  const toggleMemorized = useLibraryStore((s) => s.toggleMemorized);
+  const toggleVerseInCollection = useLibraryStore((s) => s.toggleVerseInCollection);
+  const removeCollection = useLibraryStore((s) => s.removeCollection);
 
   const chaptersById = useMemo(() => {
     const map = new Map<number, string>();
@@ -33,6 +38,19 @@ export default function BookmarksScreen() {
   const notes = useMemo(
     () => Object.values(notesMap).sort((a, b) => (b.updatedAt ?? b.createdAt) - (a.updatedAt ?? a.createdAt)),
     [notesMap]
+  );
+  const memorized = useMemo(
+    () => Object.values(memorizedMap).sort((a, b) => b.memorizedAt - a.memorizedAt),
+    [memorizedMap]
+  );
+  const allVersesByKey = useMemo(() => {
+    const out = new Map<string, LibraryVerse>();
+    for (const item of [...bookmarks, ...favorites, ...notes, ...memorized]) out.set(item.verseKey, item);
+    return out;
+  }, [bookmarks, favorites, memorized, notes]);
+  const collections = useMemo(
+    () => Object.values(collectionsMap).sort((a, b) => b.updatedAt - a.updatedAt),
+    [collectionsMap]
   );
 
   const matchesQuery = (item: LibraryVerse) => {
@@ -51,7 +69,7 @@ export default function BookmarksScreen() {
       .some((value) => String(value).toLowerCase().includes(trimmed));
   };
 
-  type Section = { title: string; kind: "bookmark" | "favorite" | "note"; data: LibraryVerse[] };
+  type Section = { title: string; kind: "bookmark" | "favorite" | "note" | "memorized" | "collection"; collectionId?: string; data: LibraryVerse[] };
   const sections = useMemo<Section[]>(() => {
     const out: Section[] = [];
     if ((filter === "all" || filter === "bookmark") && bookmarks.length) {
@@ -63,10 +81,24 @@ export default function BookmarksScreen() {
     if ((filter === "all" || filter === "note") && notes.length) {
       out.push({ title: "Notes", kind: "note", data: notes.filter(matchesQuery) });
     }
+    if ((filter === "all" || filter === "memorized") && memorized.length) {
+      out.push({ title: "Memorized", kind: "memorized", data: memorized.filter(matchesQuery) });
+    }
+    if (filter === "all" || filter === "collection") {
+      for (const collection of collections) {
+        const data = collection.verseKeys
+          .map((key) => allVersesByKey.get(key))
+          .filter((item): item is LibraryVerse => !!item)
+          .filter(matchesQuery);
+        if (data.length) {
+          out.push({ title: collection.name, kind: "collection", collectionId: collection.id, data });
+        }
+      }
+    }
     return out.filter((section) => section.data.length > 0);
-  }, [bookmarks, favorites, filter, notes, query, chaptersById]);
+  }, [allVersesByKey, bookmarks, chaptersById, collections, favorites, filter, memorized, notes, query]);
 
-  const hasAnySavedContent = bookmarks.length + favorites.length + notes.length > 0;
+  const hasAnySavedContent = bookmarks.length + favorites.length + notes.length + memorized.length + collections.length > 0;
 
   return (
     <Screen className="pt-6">
@@ -96,6 +128,8 @@ export default function BookmarksScreen() {
               ["bookmark", "Bookmarks"],
               ["favorite", "Favorites"],
               ["note", "Notes"],
+              ["memorized", "Memorized"],
+              ["collection", "Collections"],
             ].map(([id, label]) => (
               <Pressable
                 key={id}
@@ -125,8 +159,13 @@ export default function BookmarksScreen() {
             </View>
           }
           renderSectionHeader={({ section }) => (
-            <View className="mt-2">
+            <View className="mt-2 flex-row items-center justify-between">
               <Text className="font-uiSemibold text-base text-text">{section.title}</Text>
+              {section.kind === "collection" && section.collectionId ? (
+                <Pressable className="rounded-full bg-surface px-3 py-1" onPress={() => removeCollection(section.collectionId!)}>
+                  <Text className="font-uiMedium text-xs text-danger">Remove collection</Text>
+                </Pressable>
+              ) : null}
             </View>
           )}
           renderItem={({ item, section }) => {
@@ -183,7 +222,9 @@ export default function BookmarksScreen() {
                       onPress={() => {
                         if (section.kind === "bookmark") removeBookmark(item.verseKey);
                         else if (section.kind === "favorite") removeFavorite(item.verseKey);
-                        else removeNote(item.verseKey);
+                        else if (section.kind === "note") removeNote(item.verseKey);
+                        else if (section.kind === "memorized") toggleMemorized(item);
+                        else if (section.kind === "collection" && section.collectionId) toggleVerseInCollection(section.collectionId, item);
                       }}
                       color={colors.danger}
                       className="bg-bg"

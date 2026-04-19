@@ -17,6 +17,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { IconButton } from "@/components/IconButton";
 import { useAppLocale } from "@/i18n/useAppLocale";
+import { useToast } from "@/providers/ToastProvider";
 import type { Verse } from "@/services/quranComApi";
 import { useAudioStore } from "@/store/audioStore";
 import { useLibraryStore } from "@/store/libraryStore";
@@ -45,6 +46,7 @@ export function VerseActionsSheet({
 }) {
   const insets = useSafeAreaInsets();
   const { t, isRTL } = useAppLocale();
+  const { showToast } = useToast();
   const playVerseQueue = useAudioStore((s) => s.playVerseQueue);
 
   const verseKey = verse?.verse_key ?? "";
@@ -55,12 +57,19 @@ export function VerseActionsSheet({
   const bookmarked = useLibraryStore((s) => (verseKey ? !!s.bookmarks[verseKey] : false));
   const favorited = useLibraryStore((s) => (verseKey ? !!s.favorites[verseKey] : false));
   const savedNote = useLibraryStore((s) => (verseKey ? s.notes[verseKey] : undefined));
+  const collections = useLibraryStore((s) => Object.values(s.collections).sort((a, b) => b.updatedAt - a.updatedAt));
+  const memorized = useLibraryStore((s) => (verseKey ? s.memorized[verseKey] : undefined));
   const toggleBookmark = useLibraryStore((s) => s.toggleBookmark);
   const toggleFavorite = useLibraryStore((s) => s.toggleFavorite);
   const saveNote = useLibraryStore((s) => s.saveNote);
   const removeNote = useLibraryStore((s) => s.removeNote);
+  const upsertCollection = useLibraryStore((s) => s.upsertCollection);
+  const toggleVerseInCollection = useLibraryStore((s) => s.toggleVerseInCollection);
+  const toggleMemorized = useLibraryStore((s) => s.toggleMemorized);
+  const markMemorizedReviewed = useLibraryStore((s) => s.markMemorizedReviewed);
   const [noteDraft, setNoteDraft] = useState("");
   const [tagDraft, setTagDraft] = useState("");
+  const [collectionDraft, setCollectionDraft] = useState("");
   const [noteStatus, setNoteStatus] = useState<string | null>(null);
 
   useEffect(() => {
@@ -90,6 +99,18 @@ export function VerseActionsSheet({
   const shareMessage = useMemo(() => {
     const parts = [verse?.text_uthmani, translation, verseKey ? `(${verseKey})` : ""].filter(Boolean);
     return parts.join("\n\n");
+  }, [translation, verse?.text_uthmani, verseKey]);
+
+  const shareCardMessage = useMemo(() => {
+    return [
+      "* Quran Reflection *",
+      "",
+      verse?.text_uthmani,
+      translation,
+      verseKey ? `- ${verseKey}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
   }, [translation, verse?.text_uthmani, verseKey]);
 
   if (!open || !verse) return null;
@@ -188,6 +209,20 @@ export function VerseActionsSheet({
             <Pressable
               className="min-w-[30%] flex-1 flex-row items-center justify-center rounded-2xl border border-border bg-bg px-4 py-4 active:opacity-80"
               onPress={async () => {
+                try {
+                  await Share.share({ message: shareCardMessage });
+                } catch (e) {
+                  Alert.alert("Share failed", e instanceof Error ? e.message : "Please try again.");
+                }
+              }}
+            >
+              <MaterialCommunityIcons name="image-outline" size={18} color={colors.primary} />
+              <Text className="ml-2 font-uiSemibold text-sm text-text">Card</Text>
+            </Pressable>
+
+            <Pressable
+              className="min-w-[30%] flex-1 flex-row items-center justify-center rounded-2xl border border-border bg-bg px-4 py-4 active:opacity-80"
+              onPress={async () => {
                 if (!verses?.length || !libraryVerse) return;
                 onClose();
                 await playVerseQueue({
@@ -222,7 +257,15 @@ export function VerseActionsSheet({
               className={`min-w-[30%] flex-1 flex-row items-center justify-center rounded-2xl border border-border px-4 py-4 active:opacity-80 ${
                 bookmarked ? "bg-primaryMuted" : "bg-bg"
               }`}
-              onPress={() => libraryVerse && toggleBookmark({ ...libraryVerse, createdAt: Date.now() })}
+              onPress={() => {
+                if (!libraryVerse) return;
+                toggleBookmark({ ...libraryVerse, createdAt: Date.now() });
+                showToast({
+                  tone: bookmarked ? "info" : "success",
+                  title: bookmarked ? "Bookmark removed" : "Bookmarked",
+                  body: bookmarked ? "This ayah was removed from bookmarks." : "You can find it in Saved content.",
+                });
+              }}
             >
               <MaterialCommunityIcons
                 name={bookmarked ? "bookmark" : "bookmark-outline"}
@@ -236,7 +279,15 @@ export function VerseActionsSheet({
               className={`min-w-[30%] flex-1 flex-row items-center justify-center rounded-2xl border border-border px-4 py-4 active:opacity-80 ${
                 favorited ? "bg-primaryMuted" : "bg-bg"
               }`}
-              onPress={() => libraryVerse && toggleFavorite({ ...libraryVerse, createdAt: Date.now() })}
+              onPress={() => {
+                if (!libraryVerse) return;
+                toggleFavorite({ ...libraryVerse, createdAt: Date.now() });
+                showToast({
+                  tone: favorited ? "info" : "success",
+                  title: favorited ? "Removed from favorites" : "Saved verse",
+                  body: favorited ? "This ayah was removed from favorites." : "You can find it in Saved content.",
+                });
+              }}
             >
               <MaterialCommunityIcons
                 name={favorited ? "heart" : "heart-outline"}
@@ -245,7 +296,54 @@ export function VerseActionsSheet({
               />
               <Text className="ml-2 font-uiSemibold text-sm text-text">{t("surah.favorite")}</Text>
             </Pressable>
+
+            <Pressable
+              className={`min-w-[30%] flex-1 flex-row items-center justify-center rounded-2xl border border-border px-4 py-4 active:opacity-80 ${
+                memorized ? "bg-primaryMuted" : "bg-bg"
+              }`}
+              onPress={() => {
+                if (!libraryVerse) return;
+                toggleMemorized(libraryVerse);
+                showToast({
+                  tone: memorized ? "info" : "success",
+                  title: memorized ? "Removed from memorization" : "Added to memorization",
+                  body: memorized ? "This ayah left your review list." : "Review it from the Memorization screen.",
+                });
+              }}
+            >
+              <MaterialCommunityIcons
+                name={memorized ? "brain" : "brain"}
+                size={18}
+                color={memorized ? colors.primary : colors.muted}
+              />
+              <Text className="ml-2 font-uiSemibold text-sm text-text">
+                {memorized ? "Memorized" : "Memorize"}
+              </Text>
+            </Pressable>
           </View>
+
+          {memorized ? (
+            <View className="mt-4 rounded-2xl border border-border bg-surface px-4 py-4">
+              <View className="flex-row items-start justify-between">
+                <View className="flex-1 pr-4">
+                  <Text className="font-uiSemibold text-sm text-text">Memorization review</Text>
+                  <Text className="mt-1 font-ui text-xs text-muted">
+                    Reviewed {memorized.reviewCount} times
+                    {memorized.lastReviewedAt ? ` · Last ${new Date(memorized.lastReviewedAt).toLocaleDateString()}` : ""}
+                  </Text>
+                </View>
+                <Pressable
+                  className="rounded-2xl bg-primary px-4 py-2 active:opacity-80"
+                  onPress={() => {
+                    markMemorizedReviewed(verseKey);
+                    showToast({ tone: "success", title: "Review marked", body: "Your memorization review count was updated." });
+                  }}
+                >
+                  <Text className="font-uiSemibold text-xs text-primaryForeground">Reviewed</Text>
+                </Pressable>
+              </View>
+            </View>
+          ) : null}
 
           <View className="mt-4 rounded-2xl border border-border bg-surface px-4 py-4">
             <Text className="font-uiSemibold text-sm text-text">Personal note</Text>
@@ -277,6 +375,7 @@ export function VerseActionsSheet({
                     removeNote(verseKey);
                     setTagDraft("");
                     setNoteStatus("Note removed.");
+                    showToast({ tone: "info", title: "Note removed" });
                     return;
                   }
                   saveNote(
@@ -285,6 +384,7 @@ export function VerseActionsSheet({
                     tagDraft.split(",")
                   );
                   setNoteStatus("Note saved. Find it in Saved content > Notes.");
+                  showToast({ tone: "success", title: "Note saved", body: "Find it in Saved content > Notes." });
                 }}
               >
                 <Text className="text-center font-uiSemibold text-sm text-primaryForeground">Save note</Text>
@@ -298,12 +398,71 @@ export function VerseActionsSheet({
                     setNoteDraft("");
                     setTagDraft("");
                     setNoteStatus("Note removed.");
+                    showToast({ tone: "info", title: "Note removed" });
                   }}
                 >
                   <Text className="text-center font-uiSemibold text-sm text-danger">Remove</Text>
                 </Pressable>
               ) : null}
             </View>
+          </View>
+
+          <View className="mt-4 rounded-2xl border border-border bg-surface px-4 py-4">
+            <Text className="font-uiSemibold text-sm text-text">Collections</Text>
+            <Text className="mt-1 font-ui text-xs text-muted">
+              Build groups like Duas, Patience, Ramadan, or Family.
+            </Text>
+            <View className="mt-3 flex-row gap-3">
+              <TextInput
+                value={collectionDraft}
+                onChangeText={setCollectionDraft}
+                placeholder="New collection name"
+                placeholderTextColor={colors.muted}
+                className="flex-1 rounded-2xl border border-border bg-bg px-4 py-3 font-ui text-sm text-text"
+                style={{ textAlign: isRTL ? "right" : "left" }}
+              />
+              <Pressable
+                className="rounded-2xl bg-primary px-4 py-3 active:opacity-80"
+                onPress={() => {
+                  if (!libraryVerse) return;
+                  const id = upsertCollection(collectionDraft);
+                  if (!id) return;
+                  toggleVerseInCollection(id, libraryVerse);
+                  setCollectionDraft("");
+                  Keyboard.dismiss();
+                  showToast({ tone: "success", title: "Collection updated", body: `Saved to ${collectionDraft.trim()}.` });
+                }}
+              >
+                <Text className="font-uiSemibold text-sm text-primaryForeground">Add</Text>
+              </Pressable>
+            </View>
+
+            {collections.length ? (
+              <View className="mt-3 flex-row flex-wrap gap-2">
+                {collections.map((collection) => {
+                  const selected = collection.verseKeys.includes(verseKey);
+                  return (
+                    <Pressable
+                      key={collection.id}
+                      className={`rounded-full px-3 py-2 active:opacity-80 ${selected ? "bg-primary" : "bg-bg"}`}
+                      onPress={() => {
+                        if (!libraryVerse) return;
+                        toggleVerseInCollection(collection.id, libraryVerse);
+                        showToast({
+                          tone: selected ? "info" : "success",
+                          title: selected ? "Removed from collection" : "Added to collection",
+                          body: collection.name,
+                        });
+                      }}
+                    >
+                      <Text className={`font-uiMedium text-xs ${selected ? "text-primaryForeground" : "text-text"}`}>
+                        {selected ? "Saved: " : ""}{collection.name}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            ) : null}
           </View>
             </ScrollView>
           </Pressable>

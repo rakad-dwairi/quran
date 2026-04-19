@@ -47,7 +47,7 @@ export function AppHeader({
               <Text className="font-uiSemibold text-[28px] text-text" style={{ textAlign }}>
                 {title}
               </Text>
-              {!showBack ? <Text className="ml-2 font-uiSemibold text-lg text-accent">✦</Text> : null}
+              {!showBack ? <Text className="ml-2 font-uiSemibold text-lg text-accent">*</Text> : null}
             </View>
             {subtitle ? (
               <Text className="mt-1 font-ui text-sm leading-6 text-muted" style={{ textAlign }}>

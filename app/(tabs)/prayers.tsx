@@ -10,6 +10,7 @@ import { NowPlayingButton } from "@/components/NowPlayingButton";
 import { Screen } from "@/components/Screen";
 import { PRAYER_IDS, type PrayerId } from "@/constants/prayer";
 import { useAppLocale } from "@/i18n/useAppLocale";
+import { useToast } from "@/providers/ToastProvider";
 import { buildManualPrayerLocation, getAutoPrayerLocation, type PrayerLocationResult } from "@/services/prayerLocation";
 import { schedulePrayerNotifications } from "@/services/prayerNotifications";
 import {
@@ -57,6 +58,7 @@ function KaabaMarker({ rotation }: { rotation: number }) {
 
 export default function PrayersScreen() {
   const { t, textAlign, rowDirection, isRTL } = useAppLocale();
+  const { showToast } = useToast();
   const {
     prayerNotificationsEnabled,
     prayerAdhanEnabled,
@@ -97,6 +99,7 @@ export default function PrayersScreen() {
   const [canWatchHeading, setCanWatchHeading] = useState(false);
   const [heading, setHeading] = useState<number | null>(null);
   const [now, setNow] = useState(() => new Date());
+  const [prayedToday, setPrayedToday] = useState<Partial<Record<PrayerId, boolean>>>({});
 
   useEffect(() => {
     const interval = setInterval(() => setNow(new Date()), 1000);
@@ -427,6 +430,33 @@ export default function PrayersScreen() {
                         name={savedOn ? "bell" : "bell-off-outline"}
                         size={22}
                         color={notificationsOn ? colors.primary : colors.muted}
+                      />
+                    </Pressable>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={`Mark ${getPrayerLabel(prayerId)} prayed`}
+                      className={`ml-2 h-11 w-11 items-center justify-center rounded-full active:opacity-80 ${
+                        prayedToday[prayerId] ? "bg-primary" : "bg-surface"
+                      }`}
+                      onPress={() =>
+                        setPrayedToday((current) => {
+                          const next = !current[prayerId];
+                          showToast({
+                            tone: next ? "success" : "info",
+                            title: next ? "Prayer marked" : "Prayer unmarked",
+                            body: getPrayerLabel(prayerId),
+                          });
+                          return {
+                            ...current,
+                            [prayerId]: next,
+                          };
+                        })
+                      }
+                    >
+                      <MaterialCommunityIcons
+                        name={prayedToday[prayerId] ? "check" : "check-outline"}
+                        size={22}
+                        color={prayedToday[prayerId] ? colors.primaryForeground : colors.muted}
                       />
                     </Pressable>
                   </View>

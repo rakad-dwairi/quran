@@ -6,8 +6,9 @@ type InterstitialAdInstance = ReturnType<
   GoogleMobileAdsModule["InterstitialAd"]["createForAdRequest"]
 >;
 
-const ACTIONS_BETWEEN_SHOWS = __DEV__ ? 1 : 2;
-const MIN_TIME_BETWEEN_SHOWS_MS = __DEV__ ? 15 * 1000 : 90 * 1000;
+const ACTIONS_BETWEEN_SHOWS = __DEV__ ? 2 : 4;
+const MIN_TIME_BETWEEN_SHOWS_MS = __DEV__ ? 60 * 1000 : 5 * 60 * 1000;
+const MIN_TIME_AFTER_LAUNCH_MS = __DEV__ ? 15 * 1000 : 90 * 1000;
 const LOAD_TIMEOUT_MS = 8000;
 const SHOW_TIMEOUT_MS = 30000;
 
@@ -15,6 +16,7 @@ let interstitialAd: InterstitialAdInstance | null = null;
 let loadPromise: Promise<boolean> | null = null;
 let eligibleActionCount = 0;
 let lastShownAt = 0;
+const launchedAt = Date.now();
 
 function canUseInterstitials() {
   return hasGoogleMobileAdsNativeModule();
@@ -41,6 +43,7 @@ function getAdUnitId(module: GoogleMobileAdsModule) {
 function shouldAttemptToShow() {
   eligibleActionCount += 1;
 
+  if (Date.now() - launchedAt < MIN_TIME_AFTER_LAUNCH_MS) return false;
   if (eligibleActionCount < ACTIONS_BETWEEN_SHOWS) return false;
   if (Date.now() - lastShownAt < MIN_TIME_BETWEEN_SHOWS_MS) return false;
 

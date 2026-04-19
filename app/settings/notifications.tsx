@@ -30,6 +30,7 @@ import {
 } from "@/services/prayerNotifications";
 import { useSettingsStore } from "@/store/settingsStore";
 import { colors } from "@/theme/colors";
+import { confirmNotificationPermission } from "@/utils/permissionPrompts";
 
 type PickerOption = {
   label: string;
@@ -55,6 +56,8 @@ const TIME_OPTIONS = Array.from({ length: 24 }).flatMap((_, hour) => MINUTES.map
 async function ensurePermission() {
   const current = await Notifications.getPermissionsAsync();
   if (current.status === "granted") return true;
+  const shouldAsk = await confirmNotificationPermission();
+  if (!shouldAsk) return false;
   const req = await Notifications.requestPermissionsAsync();
   return req.status === "granted";
 }

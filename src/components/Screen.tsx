@@ -3,6 +3,7 @@ import type { ViewProps } from "react-native";
 import { KeyboardAvoidingView, Platform, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AdBanner } from "@/components/AdBanner";
+import { useSettingsStore } from "@/store/settingsStore";
 
 type ScreenProps = PropsWithChildren<
   ViewProps & {
@@ -20,6 +21,8 @@ export function Screen({
   ...props
 }: ScreenProps) {
   const insets = useSafeAreaInsets();
+  const theme = useSettingsStore((s) => s.theme);
+  const backgroundColor = theme === "dark" ? "#06130F" : theme === "sepia" ? "#F4E8D0" : "#FAF8F5";
 
   return (
     <KeyboardAvoidingView
@@ -29,6 +32,7 @@ export function Screen({
     >
       <View
         {...props}
+        style={{ backgroundColor }}
         className={`flex-1 bg-bg ${className ?? ""}`}
       >
         <View className={`flex-1 ${padded ? "px-6" : ""}`}>{children}</View>

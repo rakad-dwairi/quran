@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, Text, View } from "react-native";
 import { useShallow } from "zustand/react/shallow";
 import { ActionButton } from "@/components/ActionButton";
@@ -12,12 +12,14 @@ import { SurahListItem } from "@/components/SurahListItem";
 import { useChaptersQuery } from "@/hooks/quranQueries";
 import { useAppLocale } from "@/i18n/useAppLocale";
 import { showInterstitialAdIfAvailable } from "@/services/interstitialAds";
+import { listDownloads } from "@/services/offlineContent";
 import { useSettingsStore } from "@/store/settingsStore";
 
 export default function QuranScreen() {
   const { appLanguage, t, textAlign } = useAppLocale();
   const chaptersQuery = useChaptersQuery({ language: appLanguage });
   const data = useMemo(() => chaptersQuery.data ?? [], [chaptersQuery.data]);
+  const [offlineChapterIds, setOfflineChapterIds] = useState<Set<number>>(() => new Set());
   const { lastReadChapterId, lastReadVerseKey } = useSettingsStore(
     useShallow((state) => ({
       lastReadChapterId: state.lastReadChapterId,
@@ -29,6 +31,19 @@ export default function QuranScreen() {
     await showInterstitialAdIfAvailable();
     router.push(`/surah/${chapterId}`);
   }
+
+  useEffect(() => {
+    let cancelled = false;
+    listDownloads()
+      .then((items) => {
+        if (cancelled) return;
+        setOfflineChapterIds(new Set(items.map((item) => item.chapterId)));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <Screen className="pt-6">
@@ -91,7 +106,7 @@ export default function QuranScreen() {
           ItemSeparatorComponent={() => <View className="h-3" />}
           renderItem={({ item }) => (
             <Pressable onPress={() => openChapter(item.id)} className="active:opacity-80">
-              <SurahListItem chapter={item} />
+              <SurahListItem chapter={item} offlineReady={offlineChapterIds.has(item.id)} />
             </Pressable>
           )}
         />

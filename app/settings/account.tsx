@@ -3,30 +3,34 @@ import { useEffect, useMemo, useState } from "react";
 import { Alert, Pressable, Text, TextInput, View } from "react-native";
 import { AppHeader } from "@/components/AppHeader";
 import { EmptyState } from "@/components/EmptyState";
+import { useToast } from "@/providers/ToastProvider";
 import { Screen } from "@/components/Screen";
 import { SectionCard } from "@/components/SectionCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { isFirebaseConfigured, getFirebaseAuth, getFirestoreDb } from "@/services/firebaseClient";
-import { useLibraryStore, type LibraryVerse } from "@/store/libraryStore";
+import { useLibraryStore, type LibraryVerse, type MemorizedVerse, type VerseCollection } from "@/store/libraryStore";
 import { friendlyFirebaseAuthError } from "@/utils/firebaseAuthErrors";
 import { colors } from "@/theme/colors";
 import {
   createUserWithEmailAndPassword,
+  deleteUser,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut,
   type User,
 } from "firebase/auth";
-import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
+import { deleteDoc, doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 
-function mergeVerseMap(
-  a: Record<string, LibraryVerse>,
-  b: Record<string, LibraryVerse>
-): Record<string, LibraryVerse> {
-  const out: Record<string, LibraryVerse> = { ...a };
+function mergeVerseMap<T extends LibraryVerse>(
+  a: Record<string, T>,
+  b: Record<string, T>
+): Record<string, T> {
+  const out: Record<string, T> = { ...a };
   for (const [key, verse] of Object.entries(b)) {
     const existing = out[key];
-    if (!existing || verse.createdAt > existing.createdAt) {
+    const verseTime = verse.updatedAt ?? verse.createdAt;
+    const existingTime = existing ? existing.updatedAt ?? existing.createdAt : 0;
+    if (!existing || verseTime > existingTime) {
       out[key] = verse;
     }
   }
@@ -45,6 +49,7 @@ export default function AccountScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (!configured) return;
@@ -73,14 +78,24 @@ export default function AccountScreen() {
         bookmarks?: Record<string, LibraryVerse>;
         favorites?: Record<string, LibraryVerse>;
         notes?: Record<string, LibraryVerse>;
+        collections?: Record<string, VerseCollection>;
+        memorized?: Record<string, MemorizedVerse>;
       };
 
       const local = useLibraryStore.getState().getSnapshot();
       const mergedBookmarks = mergeVerseMap(local.bookmarks, remote.bookmarks ?? {});
       const mergedFavorites = mergeVerseMap(local.favorites, remote.favorites ?? {});
       const mergedNotes = mergeVerseMap(local.notes, remote.notes ?? {});
+      const mergedMemorized = mergeVerseMap(local.memorized, remote.memorized ?? {});
+      const mergedCollections = { ...(remote.collections ?? {}), ...local.collections };
 
-      useLibraryStore.getState().replaceAll({ bookmarks: mergedBookmarks, favorites: mergedFavorites, notes: mergedNotes });
+      useLibraryStore.getState().replaceAll({
+        bookmarks: mergedBookmarks,
+        favorites: mergedFavorites,
+        notes: mergedNotes,
+        collections: mergedCollections,
+        memorized: mergedMemorized,
+      });
 
       await setDoc(
         ref,
@@ -88,15 +103,59 @@ export default function AccountScreen() {
           bookmarks: mergedBookmarks,
           favorites: mergedFavorites,
           notes: mergedNotes,
+          collections: mergedCollections,
+          memorized: mergedMemorized,
           updatedAt: serverTimestamp(),
         },
         { merge: true }
       );
 
       setLastSyncedAt(Date.now());
-      Alert.alert("Synced", "Your bookmarks, favorites, and notes are up to date.");
+      showToast({ tone: "success", title: "Synced", body: "Your saved library is up to date." });
     } catch (e) {
-      Alert.alert("Sync failed", e instanceof Error ? e.message : "Please try again.");
+      showToast({ tone: "error", title: "Sync failed", body: e instanceof Error ? e.message : "Please try again." });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function confirmDeleteAccount() {
+    Alert.alert(
+      "Delete account?",
+      "This deletes your sign-in account and associated cloud library data. Local data on this device will stay unless you clear it from Privacy & Data.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete account",
+          style: "destructive",
+          onPress: () => deleteAccount().catch(() => {}),
+        },
+      ]
+    );
+  }
+
+  async function deleteAccount() {
+    if (!configured) return;
+    const auth = getFirebaseAuth();
+    const current = auth.currentUser;
+    if (!current) return;
+
+    setBusy(true);
+    try {
+      const db = getFirestoreDb();
+      await deleteDoc(doc(db, "users", current.uid, "library", "main")).catch(() => {});
+      await deleteDoc(doc(db, "users", current.uid)).catch(() => {});
+      await deleteUser(current);
+      showToast({ tone: "success", title: "Account deleted", body: "Your cloud account and library data were removed." });
+    } catch (e) {
+      const message = friendlyFirebaseAuthError(e);
+      showToast({
+        tone: "error",
+        title: "Could not delete account",
+        body: message.includes("recent") || message.includes("credential")
+          ? "For security, sign out and sign in again, then try deleting the account."
+          : message,
+      });
     } finally {
       setBusy(false);
     }
@@ -147,6 +206,13 @@ export default function AccountScreen() {
                 disabled={busy}
               >
                 <Text className="text-center font-uiSemibold text-text">Sign out</Text>
+              </Pressable>
+              <Pressable
+                className="rounded-2xl border border-border bg-bg px-5 py-3 active:opacity-80"
+                onPress={confirmDeleteAccount}
+                disabled={busy}
+              >
+                <Text className="text-center font-uiSemibold" style={{ color: colors.danger }}>Delete account</Text>
               </Pressable>
             </View>
           </SectionCard>

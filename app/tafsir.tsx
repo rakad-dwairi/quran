@@ -10,6 +10,7 @@ import { useTafsirQuery, useVerseByKeyQuery } from "@/hooks/quranQueries";
 import { stripHtmlTags } from "@/utils/html";
 import { colors } from "@/theme/colors";
 import { useSettingsStore } from "@/store/settingsStore";
+import { useLibraryStore } from "@/store/libraryStore";
 
 export default function TafsirScreen() {
   const { verseId: verseIdParam, verseKey: verseKeyParam } = useLocalSearchParams<{
@@ -27,6 +28,7 @@ export default function TafsirScreen() {
       translationId: state.translationId,
     }))
   );
+  const saveNote = useLibraryStore((s) => s.saveNote);
 
   const verseQuery = useVerseByKeyQuery({
     verseKey,
@@ -171,6 +173,35 @@ export default function TafsirScreen() {
                     </Text>
                   ))}
                 </>
+              ) : null}
+
+              {verseQuery.data && verseKey ? (
+                <Pressable
+                  className="mt-4 rounded-2xl border border-border bg-bg px-4 py-3 active:opacity-80"
+                  onPress={() => {
+                    const note = [
+                      "AI summary",
+                      stripHtmlTags(aiResult.summary),
+                      ...(aiResult.keyPoints?.length
+                        ? ["", "Key points", ...aiResult.keyPoints.map((p) => `- ${stripHtmlTags(p)}`)]
+                        : []),
+                    ].join("\n");
+                    saveNote(
+                      {
+                        verseKey,
+                        chapterId: Number(verseKey.split(":")[0]),
+                        verseNumber: verseQuery.data.verse_number,
+                        arabicText: verseArabic,
+                        translationText: verseTranslation,
+                        createdAt: Date.now(),
+                      },
+                      note,
+                      ["ai", "tafsir"]
+                    );
+                  }}
+                >
+                  <Text className="text-center font-uiSemibold text-sm text-text">Save AI summary to notes</Text>
+                </Pressable>
               ) : null}
             </View>
           ) : null}
