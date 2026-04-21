@@ -7,7 +7,7 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>$(DEVELOPMENT_LANGUAGE)</string>
     <key>CFBundleDisplayName</key>
-    <string>Quran</string>
+    <string>Hudaa</string>
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
@@ -45,7 +45,7 @@
       </dict>
     </array>
     <key>CFBundleVersion</key>
-    <string>1</string>
+    <string>4</string>
     <key>FacebookAdvertiserIDCollectionEnabled</key>
     <false/>
     <key>FacebookAppID</key>
@@ -57,7 +57,7 @@
     <key>FacebookClientToken</key>
     <string>4fe2e10a47d6b0dcbc6b414034d458f1</string>
     <key>FacebookDisplayName</key>
-    <string>Quran</string>
+      <string>Hudaa</string>
     <key>GADApplicationIdentifier</key>
     <string>ca-app-pub-9413843584219893~6820834493</string>
     <key>GADDelayAppMeasurementInit</key>
@@ -94,8 +94,6 @@
     <array>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
     </array>
-    <key>NSUserTrackingUsageDescription</key>
-    <string>This identifier may be used to deliver relevant ads.</string>
     <key>RCTNewArchEnabled</key>
     <true/>
     <key>SKAdNetworkItems</key>

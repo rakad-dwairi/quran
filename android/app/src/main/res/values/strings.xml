@@ -1,5 +1,5 @@
 <resources>
-  <string name="app_name">Quran</string>
+  <string name="app_name">Hudaa</string>
   <string name="expo_splash_screen_resize_mode" translatable="false">contain</string>
   <string name="expo_splash_screen_status_bar_translucent" translatable="false">false</string>
   <string name="facebook_app_id">25860546836980873</string>

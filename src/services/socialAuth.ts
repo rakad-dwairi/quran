@@ -7,9 +7,15 @@ export {
 import type { SocialAuthProvider } from "@/services/socialAuthShared";
 
 export function getMissingSocialAuthConfig(provider: SocialAuthProvider) {
+  if (provider === "apple") return [];
+
   return provider === "google"
     ? ["EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID"]
     : ["EXPO_PUBLIC_FACEBOOK_APP_ID", "EXPO_PUBLIC_FACEBOOK_CLIENT_TOKEN"];
+}
+
+export async function signInWithAppleAccount() {
+  throw new Error("Sign in with Apple is not available in this runtime.");
 }
 
 export async function signInWithGoogleAccount() {

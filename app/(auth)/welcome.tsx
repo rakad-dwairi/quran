@@ -63,7 +63,7 @@ export default function WelcomeScreen() {
   const englishText = useMemo(() => englishWords.slice(0, englishWordsVisible).join(" "), [englishWords, englishWordsVisible]);
 
   return (
-    <Screen padded={false} className="bg-primary" showAd={false}>
+    <Screen padded={false} backgroundColor={colors.primary} showAd={false}>
       <Stack.Screen options={{ headerShown: false }} />
       <Pattern />
 
@@ -72,7 +72,7 @@ export default function WelcomeScreen() {
           <View className="h-14 w-14 items-center justify-center rounded-full bg-white/10">
             <Image
               source={require("../../assets/logo-mark.png")}
-              style={{ width: 30, height: 30, tintColor: "rgba(255,255,255,0.9)" }}
+              style={{ width: 48, height: 48, borderRadius: 24 }}
               resizeMode="contain"
             />
           </View>
@@ -153,4 +153,3 @@ export default function WelcomeScreen() {
     </Screen>
   );
 }
-

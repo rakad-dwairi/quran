@@ -4,9 +4,11 @@ import { getFirestoreDb } from "@/services/firebaseClient";
 
 export async function upsertUserProfile(
   user: User,
-  provider: "email" | "google" | "facebook"
+  provider: "email" | "apple" | "google" | "facebook",
+  overrides: { displayName?: string | null } = {}
 ) {
-  const names = (user.displayName ?? "").trim().split(/\s+/).filter(Boolean);
+  const displayName = overrides.displayName ?? user.displayName ?? null;
+  const names = (displayName ?? "").trim().split(/\s+/).filter(Boolean);
   const firstName = names[0] ?? null;
   const lastName = names.length > 1 ? names.slice(1).join(" ") : null;
 
@@ -15,7 +17,7 @@ export async function upsertUserProfile(
     {
       uid: user.uid,
       email: user.email ?? null,
-      displayName: user.displayName ?? null,
+      displayName,
       firstName,
       lastName,
       photoURL: user.photoURL ?? null,

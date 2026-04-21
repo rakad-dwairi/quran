@@ -10,12 +10,11 @@
         {
           "androidAppId": "ca-app-pub-9413843584219893~5507752826",
           "iosAppId": "ca-app-pub-9413843584219893~6820834493",
-          "delayAppMeasurementInit": true,
-          "userTrackingUsageDescription": "This identifier may be used to deliver relevant ads."
+          "delayAppMeasurementInit": true
         }
       ]
     ],
-    "name": "Quran",
+    "name": "Hudaa",
     "slug": "quran",
     "icon": "./assets/icon.png",
     "splash": {
@@ -33,7 +32,7 @@
         "NSLocationWhenInUseUsageDescription": "Your location is used to calculate accurate prayer times, Qibla direction, and nearby Islamic features."
       },
       "supportsTablet": false,
-      "buildNumber": "1"
+      "buildNumber": "4"
     },
     "android": {
       "package": "com.rakad.quran",
@@ -55,6 +54,12 @@
       "icon": "./assets/notification-icon.png",
       "color": "#0E4E39",
       "iosDisplayInForeground": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "9ebe8e10-e37e-4c58-a066-a5622c9db2bc"
+      }
     }
   }
 }

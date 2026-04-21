@@ -13,6 +13,10 @@ module.exports = ({ config }) => {
     plugins.push("expo-localization");
   }
 
+  if (!plugins.includes("expo-apple-authentication")) {
+    plugins.push("expo-apple-authentication");
+  }
+
   plugins.push([
     "expo-notifications",
     {

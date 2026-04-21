@@ -1,13 +1,18 @@
+import * as AppleAuthentication from "expo-apple-authentication";
+import * as Crypto from "expo-crypto";
 import { Platform } from "react-native";
 import {
+  type AuthCredential,
   FacebookAuthProvider,
   GoogleAuthProvider,
+  OAuthProvider,
   signInWithCredential,
+  updateProfile,
 } from "firebase/auth";
 import { getFirebaseAuth } from "@/services/firebaseClient";
 import { upsertUserProfile } from "@/services/userProfile";
 import {
-  isSocialSignInCancelled,
+  isSocialSignInCancelled as isSharedSocialSignInCancelled,
   SocialSignInCancelledError,
   type SocialAuthProvider,
 } from "@/services/socialAuthShared";
@@ -15,14 +20,37 @@ import {
 let googleConfigured = false;
 let facebookConfigured = false;
 
+const PUBLIC_ENV = {
+  EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+  EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+  EXPO_PUBLIC_GOOGLE_IOS_REVERSED_CLIENT_ID: process.env.EXPO_PUBLIC_GOOGLE_IOS_REVERSED_CLIENT_ID,
+  EXPO_PUBLIC_FACEBOOK_APP_ID: process.env.EXPO_PUBLIC_FACEBOOK_APP_ID,
+  EXPO_PUBLIC_FACEBOOK_CLIENT_TOKEN: process.env.EXPO_PUBLIC_FACEBOOK_CLIENT_TOKEN,
+} as const;
+
 function readEnv(name: string) {
-  const value = process.env[name];
+  const value = PUBLIC_ENV[name as keyof typeof PUBLIC_ENV];
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
-export { isSocialSignInCancelled };
+export function isSocialSignInCancelled(error: unknown) {
+  const code =
+    typeof error === "object" && error && "code" in error
+      ? String((error as { code?: unknown }).code)
+      : null;
+
+  return (
+    isSharedSocialSignInCancelled(error) ||
+    code === "ERR_REQUEST_CANCELED" ||
+    code === "ERR_CANCELED"
+  );
+}
 
 export function getMissingSocialAuthConfig(provider: SocialAuthProvider) {
+  if (provider === "apple") {
+    return [];
+  }
+
   if (provider === "google") {
     const required = [["EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID", readEnv("EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID")]];
 
@@ -48,12 +76,72 @@ export function getMissingSocialAuthConfig(provider: SocialAuthProvider) {
 }
 
 async function finishFirebaseSignIn(
-  credentialProvider: "google" | "facebook",
-  credential: ReturnType<typeof GoogleAuthProvider.credential>
+  credentialProvider: SocialAuthProvider,
+  credential: AuthCredential
 ) {
   const result = await signInWithCredential(getFirebaseAuth(), credential);
   await upsertUserProfile(result.user, credentialProvider).catch(() => {});
   return result.user;
+}
+
+function randomNonce(length = 32) {
+  const charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._";
+  let nonce = "";
+  for (let index = 0; index < length; index += 1) {
+    nonce += charset[Math.floor(Math.random() * charset.length)];
+  }
+  return nonce;
+}
+
+function formatAppleName(fullName: AppleAuthentication.AppleAuthenticationFullName | null) {
+  if (!fullName) return null;
+  return [fullName.givenName, fullName.middleName, fullName.familyName]
+    .filter(Boolean)
+    .join(" ")
+    .trim() || null;
+}
+
+export async function signInWithAppleAccount() {
+  if (Platform.OS !== "ios") {
+    throw new Error("Sign in with Apple is available on iOS only.");
+  }
+
+  const available = await AppleAuthentication.isAvailableAsync();
+  if (!available) {
+    throw new Error("Sign in with Apple is not available on this device.");
+  }
+
+  const rawNonce = randomNonce();
+  const hashedNonce = await Crypto.digestStringAsync(
+    Crypto.CryptoDigestAlgorithm.SHA256,
+    rawNonce
+  );
+
+  const response = await AppleAuthentication.signInAsync({
+    requestedScopes: [
+      AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+      AppleAuthentication.AppleAuthenticationScope.EMAIL,
+    ],
+    nonce: hashedNonce,
+  });
+
+  if (!response.identityToken) {
+    throw new Error("Apple did not return a usable identity token.");
+  }
+
+  const provider = new OAuthProvider("apple.com");
+  const credential = provider.credential({
+    idToken: response.identityToken,
+    rawNonce,
+  });
+  const user = await finishFirebaseSignIn("apple", credential);
+  const appleName = formatAppleName(response.fullName);
+  if (appleName && !user.displayName) {
+    await updateProfile(user, { displayName: appleName }).catch(() => {});
+    await upsertUserProfile(user, "apple", { displayName: appleName }).catch(() => {});
+  }
+
+  return user;
 }
 
 function configureGoogleSignIn() {
@@ -117,7 +205,7 @@ function configureFacebookSignIn() {
   const { Settings } = require("react-native-fbsdk-next") as typeof import("react-native-fbsdk-next");
   Settings.setAppID(appID);
   Settings.setClientToken(clientToken);
-  Settings.setAppName("Quran");
+  Settings.setAppName("Hudaa");
   Settings.setAutoLogAppEventsEnabled(false);
   Settings.setAdvertiserIDCollectionEnabled(false);
   Settings.initializeSDK();

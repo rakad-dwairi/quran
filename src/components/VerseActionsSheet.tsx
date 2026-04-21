@@ -15,6 +15,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useShallow } from "zustand/react/shallow";
 import { IconButton } from "@/components/IconButton";
 import { useAppLocale } from "@/i18n/useAppLocale";
 import { useToast } from "@/providers/ToastProvider";
@@ -57,7 +58,9 @@ export function VerseActionsSheet({
   const bookmarked = useLibraryStore((s) => (verseKey ? !!s.bookmarks[verseKey] : false));
   const favorited = useLibraryStore((s) => (verseKey ? !!s.favorites[verseKey] : false));
   const savedNote = useLibraryStore((s) => (verseKey ? s.notes[verseKey] : undefined));
-  const collections = useLibraryStore((s) => Object.values(s.collections).sort((a, b) => b.updatedAt - a.updatedAt));
+  const collections = useLibraryStore(
+    useShallow((s) => Object.values(s.collections).sort((a, b) => b.updatedAt - a.updatedAt))
+  );
   const memorized = useLibraryStore((s) => (verseKey ? s.memorized[verseKey] : undefined));
   const toggleBookmark = useLibraryStore((s) => s.toggleBookmark);
   const toggleFavorite = useLibraryStore((s) => s.toggleFavorite);

@@ -1,4 +1,4 @@
-export type SocialAuthProvider = "google" | "facebook";
+export type SocialAuthProvider = "apple" | "google" | "facebook";
 
 export class SocialSignInCancelledError extends Error {
   constructor() {

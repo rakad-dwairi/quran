@@ -1,6 +1,7 @@
 import {
   FacebookAuthProvider,
   GoogleAuthProvider,
+  OAuthProvider,
   signInWithPopup,
 } from "firebase/auth";
 import { getFirebaseAuth } from "@/services/firebaseClient";
@@ -43,5 +44,15 @@ export async function signInWithFacebookAccount() {
 
   const result = await signInWithPopup(getFirebaseAuth(), provider);
   await upsertUserProfile(result.user, "facebook").catch(() => {});
+  return result.user;
+}
+
+export async function signInWithAppleAccount() {
+  const provider = new OAuthProvider("apple.com");
+  provider.addScope("email");
+  provider.addScope("name");
+
+  const result = await signInWithPopup(getFirebaseAuth(), provider);
+  await upsertUserProfile(result.user, "apple").catch(() => {});
   return result.user;
 }

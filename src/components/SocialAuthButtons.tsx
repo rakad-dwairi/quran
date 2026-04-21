@@ -1,9 +1,10 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { Alert, Pressable, Text, View } from "react-native";
+import { Alert, Platform, Pressable, Text, View } from "react-native";
 import { isFirebaseConfigured } from "@/services/firebaseClient";
 import {
   getMissingSocialAuthConfig,
   isSocialSignInCancelled,
+  signInWithAppleAccount,
   signInWithFacebookAccount,
   signInWithGoogleAccount,
   type SocialAuthProvider,
@@ -24,6 +25,13 @@ const PROVIDERS: {
   signIn: () => Promise<unknown>;
 }[] = [
   {
+    id: "apple",
+    label: "Continue with Apple",
+    icon: "apple",
+    color: "#111111",
+    signIn: signInWithAppleAccount,
+  },
+  {
     id: "google",
     label: "Continue with Google",
     icon: "google",
@@ -40,11 +48,13 @@ const PROVIDERS: {
 ];
 
 export function SocialAuthButtons({ busy, onBusyChange }: SocialAuthButtonsProps) {
+  const visibleProviders = PROVIDERS.filter((provider) => provider.id !== "apple" || Platform.OS === "ios");
+
   async function handlePress(provider: (typeof PROVIDERS)[number]) {
     if (!isFirebaseConfigured()) {
       Alert.alert(
-        "Firebase not configured",
-        "Add your Firebase web config values to `.env`, then restart Expo."
+        "Sign in unavailable",
+        "This build is missing Firebase settings. Add the Firebase environment values to EAS, then rebuild the app."
       );
       return;
     }
@@ -72,7 +82,7 @@ export function SocialAuthButtons({ busy, onBusyChange }: SocialAuthButtonsProps
 
   return (
     <View className="gap-3">
-      {PROVIDERS.map((provider) => (
+      {visibleProviders.map((provider) => (
         <Pressable
           key={provider.id}
           className="flex-row items-center justify-center rounded-2xl border border-border bg-bg px-5 py-4 active:opacity-80"

@@ -1,10 +1,9 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Stack, router } from "expo-router";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
   Alert,
   Image,
-  Modal,
   Pressable,
   ScrollView,
   Text,
@@ -18,23 +17,6 @@ import { colors } from "@/theme/colors";
 import { friendlyFirebaseAuthError } from "@/utils/firebaseAuthErrors";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
-
-const DIAL_CODES = [
-  { name: "United States", dial: "+1" },
-  { name: "United Kingdom", dial: "+44" },
-  { name: "Canada", dial: "+1" },
-  { name: "Saudi Arabia", dial: "+966" },
-  { name: "United Arab Emirates", dial: "+971" },
-  { name: "Qatar", dial: "+974" },
-  { name: "Kuwait", dial: "+965" },
-  { name: "Bahrain", dial: "+973" },
-  { name: "Jordan", dial: "+962" },
-  { name: "Egypt", dial: "+20" },
-  { name: "Morocco", dial: "+212" },
-  { name: "Turkey", dial: "+90" },
-  { name: "Pakistan", dial: "+92" },
-  { name: "Indonesia", dial: "+62" },
-] as const;
 
 function Field({
   icon,
@@ -80,24 +62,15 @@ export default function RegisterScreen() {
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [dial, setDial] = useState<(typeof DIAL_CODES)[number]["dial"]>("+1");
-  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
 
-  const [pickerOpen, setPickerOpen] = useState(false);
-
-  const dialLabel = useMemo(() => {
-    const match = DIAL_CODES.find((c) => c.dial === dial);
-    return match ? `${match.dial}  ${match.name}` : dial;
-  }, [dial]);
-
   async function handleRegister() {
     if (!configured) {
       Alert.alert(
-        "Firebase not configured",
-        "Add your Firebase web config values to `.env`, then restart Expo with `npm start -c`."
+        "Sign up unavailable",
+        "This build is missing Firebase settings. Add the Firebase environment values to EAS, then rebuild the app."
       );
       return;
     }
@@ -105,7 +78,6 @@ export default function RegisterScreen() {
     const fn = firstName.trim();
     const ln = lastName.trim();
     const nextEmail = email.trim();
-    const digits = phone.replace(/[^\d]/g, "");
 
     if (!fn) {
       Alert.alert("Missing first name", "Please enter your first name.");
@@ -113,10 +85,6 @@ export default function RegisterScreen() {
     }
     if (!ln) {
       Alert.alert("Missing last name", "Please enter your last name.");
-      return;
-    }
-    if (digits.length < 7) {
-      Alert.alert("Invalid phone", "Please enter a valid phone number.");
       return;
     }
     if (!nextEmail) {
@@ -144,7 +112,6 @@ export default function RegisterScreen() {
 
       // Store additional profile fields in Firestore for admin visibility.
       // This lets you view user info in Firebase Console → Firestore Database → Data → users/{uid}.
-      const phoneE164 = `${dial}${digits}`;
       try {
         const db = getFirestoreDb();
         await setDoc(
@@ -155,9 +122,6 @@ export default function RegisterScreen() {
             displayName,
             firstName: fn,
             lastName: ln,
-            phone: phoneE164,
-            phoneDialCode: dial,
-            phoneNational: digits,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
           },
@@ -179,192 +143,132 @@ export default function RegisterScreen() {
   }
 
   return (
-    <Screen className="pt-10" showAd={false}>
+    <Screen padded={false} showAd={false}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      <View className="flex-row items-center justify-between">
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-          onPress={() => router.back()}
-          className="h-10 w-10 items-center justify-center rounded-full bg-surface active:opacity-80"
-        >
-          <MaterialCommunityIcons name="chevron-left" size={26} color={colors.text} />
-        </Pressable>
-
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Sign in"
-          onPress={() => router.replace("/login")}
-          className="rounded-full bg-surface px-4 py-2 active:opacity-80"
-        >
-          <Text className="font-uiSemibold text-sm text-text">Sign in</Text>
-        </Pressable>
-      </View>
-
-      <View className="mt-8 items-center">
-        <View className="h-16 w-16 items-center justify-center rounded-full bg-primaryMuted">
-          <Image
-            source={require("../../assets/logo-mark.png")}
-            style={{ width: 34, height: 34, tintColor: colors.primary }}
-            resizeMode="contain"
-          />
-        </View>
-        <Text className="mt-5 text-center font-uiSemibold text-3xl text-text">Create account</Text>
-        <Text className="mt-2 text-center font-ui text-muted">Join to sync bookmarks and favorites.</Text>
-      </View>
-
-      <View className="mt-8 rounded-3xl border border-border bg-surface px-5 py-6">
-        <SocialAuthButtons busy={busy} onBusyChange={setBusy} />
-
-        <View className="my-5 flex-row items-center">
-          <View className="h-px flex-1 bg-border" />
-          <Text className="mx-4 font-uiSemibold text-xs text-muted">OR</Text>
-          <View className="h-px flex-1 bg-border" />
-        </View>
-
-        <View className="flex-row gap-3">
-          <View className="flex-1">
-            <Text className="mb-2 font-uiMedium text-sm text-text">First name</Text>
-            <Field
-              icon="account-outline"
-              value={firstName}
-              onChangeText={setFirstName}
-              placeholder="First name"
-              autoCapitalize="words"
-              textContentType="givenName"
-            />
-          </View>
-          <View className="flex-1">
-            <Text className="mb-2 font-uiMedium text-sm text-text">Last name</Text>
-            <Field
-              icon="account-outline"
-              value={lastName}
-              onChangeText={setLastName}
-              placeholder="Last name"
-              autoCapitalize="words"
-              textContentType="familyName"
-            />
-          </View>
-        </View>
-
-        <Text className="mt-4 mb-2 font-uiMedium text-sm text-text">Phone</Text>
-        <View className="flex-row gap-3">
+      <ScrollView
+        automaticallyAdjustKeyboardInsets
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 40, paddingBottom: 36 }}
+      >
+        <View className="flex-row items-center justify-between">
           <Pressable
-            className="flex-row items-center rounded-2xl border border-border bg-bg px-4 py-3 active:opacity-80"
-            onPress={() => setPickerOpen(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+            onPress={() => router.back()}
+            className="h-10 w-10 items-center justify-center rounded-full bg-surface active:opacity-80"
           >
-            <Text className="font-uiSemibold text-base text-text">{dial}</Text>
-            <MaterialCommunityIcons name="chevron-down" size={20} color={colors.muted} style={{ marginLeft: 6 }} />
+            <MaterialCommunityIcons name="chevron-left" size={26} color={colors.text} />
           </Pressable>
-          <View className="flex-1">
-            <Field
-              icon="phone-outline"
-              value={phone}
-              onChangeText={setPhone}
-              placeholder="Phone number"
-              keyboardType="phone-pad"
-              textContentType="telephoneNumber"
-            />
-          </View>
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Sign in"
+            onPress={() => router.replace("/login")}
+            className="rounded-full bg-surface px-4 py-2 active:opacity-80"
+          >
+            <Text className="font-uiSemibold text-sm text-text">Sign in</Text>
+          </Pressable>
         </View>
 
-        <Text className="mt-4 mb-2 font-uiMedium text-sm text-text">Email</Text>
-        <Field
-          icon="email-outline"
-          value={email}
-          onChangeText={setEmail}
-          placeholder="you@example.com"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          textContentType="emailAddress"
-        />
-
-        <Text className="mt-4 mb-2 font-uiMedium text-sm text-text">Password</Text>
-        <Field
-          icon="lock-outline"
-          value={password}
-          onChangeText={setPassword}
-          placeholder="••••••••"
-          secureTextEntry
-          textContentType="newPassword"
-        />
-
-        <Text className="mt-4 mb-2 font-uiMedium text-sm text-text">Confirm password</Text>
-        <Field
-          icon="lock-check-outline"
-          value={confirm}
-          onChangeText={setConfirm}
-          placeholder="••••••••"
-          secureTextEntry
-          textContentType="newPassword"
-        />
-
-        <Pressable
-          className="mt-7 rounded-2xl bg-primary px-5 py-4 active:opacity-80"
-          onPress={() => handleRegister()}
-          disabled={busy}
-        >
-          <Text className="text-center font-uiSemibold text-lg text-primaryForeground">
-            {busy ? "Working…" : "Sign up"}
-          </Text>
-        </Pressable>
-
-        {!configured ? (
-          <View className="mt-6 rounded-2xl border border-border bg-bg px-4 py-3">
-            <Text className="font-uiSemibold text-sm text-text">Firebase not configured</Text>
-            <Text className="mt-1 font-ui text-sm text-muted">
-              Add your Firebase web config values to `.env`, then restart Expo with `npm start -c`.
-            </Text>
+        <View className="mt-8 items-center">
+          <View className="h-16 w-16 overflow-hidden rounded-full bg-primaryMuted">
+            <Image
+              source={require("../../assets/logo-mark.png")}
+              style={{ width: 64, height: 64 }}
+              resizeMode="cover"
+            />
           </View>
-        ) : null}
-      </View>
+          <Text className="mt-5 text-center font-uiSemibold text-3xl text-text">Create account</Text>
+          <Text className="mt-2 text-center font-ui text-muted">Join to sync bookmarks and favorites.</Text>
+        </View>
 
-      <Modal visible={pickerOpen} transparent animationType="fade" onRequestClose={() => setPickerOpen(false)}>
-        <Pressable
-          className="flex-1 bg-black/40 px-6 py-16"
-          onPress={() => setPickerOpen(false)}
-        >
-          <Pressable
-            style={{ maxHeight: 520 }}
-            className="rounded-3xl border border-border bg-bg p-4"
-            onPress={() => {}}
-          >
-            <View className="flex-row items-center justify-between">
-              <Text className="font-uiSemibold text-base text-text">Country code</Text>
-              <Pressable className="h-9 w-9 items-center justify-center rounded-full bg-surface" onPress={() => setPickerOpen(false)}>
-                <MaterialCommunityIcons name="close" size={18} color={colors.text} />
-              </Pressable>
+        <View className="mt-8 rounded-3xl border border-border bg-surface px-5 py-6">
+          <SocialAuthButtons busy={busy} onBusyChange={setBusy} />
+
+          <View className="my-5 flex-row items-center">
+            <View className="h-px flex-1 bg-border" />
+            <Text className="mx-4 font-uiSemibold text-xs text-muted">OR</Text>
+            <View className="h-px flex-1 bg-border" />
+          </View>
+
+          <View className="flex-row gap-3">
+            <View className="flex-1">
+              <Text className="mb-2 font-uiMedium text-sm text-text">First name</Text>
+              <Field
+                icon="account-outline"
+                value={firstName}
+                onChangeText={setFirstName}
+                placeholder="First name"
+                autoCapitalize="words"
+                textContentType="givenName"
+              />
             </View>
+            <View className="flex-1">
+              <Text className="mb-2 font-uiMedium text-sm text-text">Last name</Text>
+              <Field
+                icon="account-outline"
+                value={lastName}
+                onChangeText={setLastName}
+                placeholder="Last name"
+                autoCapitalize="words"
+                textContentType="familyName"
+              />
+            </View>
+          </View>
 
-            <Text className="mt-1 font-ui text-sm text-muted">{dialLabel}</Text>
+          <Text className="mt-4 mb-2 font-uiMedium text-sm text-text">Email</Text>
+          <Field
+            icon="email-outline"
+            value={email}
+            onChangeText={setEmail}
+            placeholder="you@example.com"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            textContentType="emailAddress"
+          />
 
-            <ScrollView className="mt-4">
-              {DIAL_CODES.map((c) => {
-                const selected = c.dial === dial;
-                return (
-                  <Pressable
-                    key={`${c.name}-${c.dial}`}
-                    className={`flex-row items-center justify-between rounded-2xl px-4 py-3 active:opacity-80 ${
-                      selected ? "bg-primaryMuted" : "bg-transparent"
-                    }`}
-                    onPress={() => {
-                      setDial(c.dial);
-                      setPickerOpen(false);
-                    }}
-                  >
-                    <View className="flex-1 pr-4">
-                      <Text className="font-uiMedium text-sm text-text">{c.name}</Text>
-                      <Text className="mt-0.5 font-ui text-xs text-muted">{c.dial}</Text>
-                    </View>
-                    {selected ? <MaterialCommunityIcons name="check" size={18} color={colors.primary} /> : null}
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
+          <Text className="mt-4 mb-2 font-uiMedium text-sm text-text">Password</Text>
+          <Field
+            icon="lock-outline"
+            value={password}
+            onChangeText={setPassword}
+            placeholder="••••••••"
+            secureTextEntry
+            textContentType="newPassword"
+          />
+
+          <Text className="mt-4 mb-2 font-uiMedium text-sm text-text">Confirm password</Text>
+          <Field
+            icon="lock-check-outline"
+            value={confirm}
+            onChangeText={setConfirm}
+            placeholder="••••••••"
+            secureTextEntry
+            textContentType="newPassword"
+          />
+
+          <Pressable
+            className="mt-7 rounded-2xl bg-primary px-5 py-4 active:opacity-80"
+            onPress={() => handleRegister()}
+            disabled={busy}
+          >
+            <Text className="text-center font-uiSemibold text-lg text-primaryForeground">
+              {busy ? "Working…" : "Sign up"}
+            </Text>
           </Pressable>
-        </Pressable>
-      </Modal>
+
+          {!configured ? (
+            <View className="mt-6 rounded-2xl border border-border bg-bg px-4 py-3">
+              <Text className="font-uiSemibold text-sm text-text">Sign up unavailable in this build</Text>
+              <Text className="mt-1 font-ui text-sm text-muted">
+                Firebase settings were not included in the store build. Add them to EAS environment variables and rebuild.
+              </Text>
+            </View>
+          ) : null}
+        </View>
+      </ScrollView>
+
     </Screen>
   );
 }
