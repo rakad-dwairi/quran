@@ -1,0 +1,62 @@
+{
+  "project_info": {
+    "project_number": "918011351723",
+    "project_id": "quran-issam",
+    "storage_bucket": "quran-issam.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:918011351723:android:1e320f7f37667f50435dee",
+        "android_client_info": {
+          "package_name": "com.rakad.quran"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "918011351723-2ca7mdelti5ekjvqmsfr91sra5144pkk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.rakad.quran",
+            "certificate_hash": "8ea4cdc0c8a4c1022082a0b11f901cce6baf1c59"
+          }
+        },
+        {
+          "client_id": "918011351723-qnbg0ij2h4jikd11m75ooldgdv87qtpt.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.rakad.quran",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "918011351723-12qjo1je1kl5i8gshn4vhelbakgv0c73.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBaXeQgk2d8mrzlxI4dSMM0BH6enbaBRDQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "918011351723-12qjo1je1kl5i8gshn4vhelbakgv0c73.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "918011351723-2pk52r0i5188bj7i345gt5n0gmpvooqm.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.rakad.quran"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
