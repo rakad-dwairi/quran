@@ -2,7 +2,7 @@ export type PrayerId = "fajr" | "dhuhr" | "asr" | "maghrib" | "isha";
 export type PrayerCalculationMethod = "muslimWorldLeague" | "ummAlQura" | "egyptian" | "isna";
 export type PrayerMadhab = "standard" | "hanafi";
 export type PrayerLocationMode = "auto" | "manual";
-export type PrayerAdhanSound = "default";
+export type PrayerAdhanSound = "adhan" | "default";
 export type PrayerReminderMinutes = 0 | 5 | 10 | 15;
 
 export const PRAYER_IDS = ["fajr", "dhuhr", "asr", "maghrib", "isha"] as const;
@@ -46,5 +46,6 @@ export const PRAYER_REMINDER_OPTIONS: Array<{ value: PrayerReminderMinutes; labe
 ];
 
 export const PRAYER_ADHAN_SOUND_OPTIONS: Array<{ value: PrayerAdhanSound; label: string }> = [
+  { value: "adhan", label: "Athan alert sound" },
   { value: "default", label: "Default notification sound" },
 ];

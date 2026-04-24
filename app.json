@@ -32,7 +32,7 @@
         "NSLocationWhenInUseUsageDescription": "Your location is used to calculate accurate prayer times, Qibla direction, and nearby Islamic features."
       },
       "supportsTablet": false,
-      "buildNumber": "4"
+      "buildNumber": "6"
     },
     "android": {
       "package": "com.rakad.quran",
@@ -47,9 +47,9 @@
         "backgroundColor": "#FAF8F5",
         "monochromeImage": "./assets/monochrome-icon.png"
       },
-      "versionCode": 3
+      "versionCode": 6
     },
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "notification": {
       "icon": "./assets/notification-icon.png",

@@ -1,6 +1,7 @@
 const googleIosUrlScheme = process.env.EXPO_PUBLIC_GOOGLE_IOS_REVERSED_CLIENT_ID;
 const facebookAppID = process.env.EXPO_PUBLIC_FACEBOOK_APP_ID;
 const facebookClientToken = process.env.EXPO_PUBLIC_FACEBOOK_CLIENT_TOKEN;
+const adhanNotificationSound = "./assets/sounds/adhan.wav";
 
 function hasValue(value) {
   return typeof value === "string" && value.trim().length > 0;
@@ -22,6 +23,7 @@ module.exports = ({ config }) => {
     {
       icon: "./assets/notification-icon.png",
       color: "#0E4E39",
+      sounds: [adhanNotificationSound],
     },
   ]);
 

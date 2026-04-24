@@ -14,7 +14,8 @@ import { type AppLanguage } from "@/i18n/config";
 import { buildPrayerTimes, getPrayerLabel, type PrayerCoordinates } from "@/services/prayerTimes";
 
 const STORAGE_KEY = "prayer-notification-ids-v1";
-const AUDIBLE_CHANNEL_ID = "prayer-times-audible-v1";
+const ADHAN_SOUND_FILE = "adhan.wav";
+const AUDIBLE_CHANNEL_ID = "prayer-times-adhan-v2";
 const SILENT_CHANNEL_ID = "prayer-times-silent-v1";
 const SCHEDULE_BUFFER_MS = 30_000;
 const DEFAULT_DAYS_AHEAD = 6;
@@ -63,8 +64,9 @@ async function setStoredIds(ids: string[]) {
   await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
 }
 
-function soundForAdhan(enabled: boolean, _sound: PrayerAdhanSound) {
-  return enabled ? true : false;
+function soundForAdhan(enabled: boolean, sound: PrayerAdhanSound) {
+  if (!enabled) return false;
+  return sound === "adhan" ? ADHAN_SOUND_FILE : true;
 }
 
 function channelIdForSound(enabled: boolean) {
@@ -79,7 +81,7 @@ export async function ensurePrayerNotificationChannels() {
     importance: Notifications.AndroidImportance.HIGH,
     vibrationPattern: [0, 250, 120, 250],
     lightColor: "#0E4E39",
-    sound: "default",
+    sound: ADHAN_SOUND_FILE,
   });
 
   await Notifications.setNotificationChannelAsync(SILENT_CHANNEL_ID, {

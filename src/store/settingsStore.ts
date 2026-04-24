@@ -171,7 +171,7 @@ const DEFAULTS: SettingsState = {
 
   prayerNotificationsEnabled: false,
   prayerAdhanEnabled: false,
-  prayerAdhanSound: "default",
+  prayerAdhanSound: "adhan",
   prayerCalculationMethod: "muslimWorldLeague",
   prayerMadhab: "standard",
   prayerLocationMode: "auto",
@@ -468,8 +468,8 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
     {
       name: "settings-v1",
       storage: createJSONStorage(() => AsyncStorage),
-      version: 6,
-      migrate: (persisted) => {
+      version: 7,
+      migrate: (persisted, persistedVersion) => {
         if (!persisted || typeof persisted !== "object") return persisted as any;
         const state = {
           ...DEFAULTS,
@@ -480,6 +480,15 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
           ...PRAYER_NOTIFICATION_DEFAULTS,
           ...((state.prayerPerPrayerNotifications as Record<string, boolean> | undefined) ?? {}),
         };
+        if (
+          (persistedVersion ?? 0) < 7 &&
+          (state.prayerAdhanSound as unknown) === "default"
+        ) {
+          state.prayerAdhanSound = "adhan";
+        }
+        if (!["adhan", "default"].includes(state.prayerAdhanSound as string)) {
+          state.prayerAdhanSound = "adhan";
+        }
         const quranTranslationLanguage = (state.quranTranslationLanguage as QuranContentLanguage | undefined) ?? "en";
         state.quranTranslationLanguage = quranTranslationLanguage;
         state.translationId =
